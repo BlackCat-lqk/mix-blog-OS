@@ -1,3 +1,4 @@
+/* * os-window * @description: 窗口组件 */
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import minimize from "@/assets/icons/minimize.svg";
@@ -21,16 +22,19 @@ const isMaximized = ref(false);
 // ---- position & size ----
 const left = ref(100);
 const top = ref(100);
-const width = ref(600);
-const height = ref(400);
-const savedRect = ref({ left: 100, top: 100, width: 600, height: 400 });
+const width = ref(1056);
+const height = ref(702);
+const savedRect = ref({ left: 100, top: 100, width: 1056, height: 702 });
 
 // ---- drag state ----
 const dragging = ref(false);
+const pendingRestore = ref(false);
 const dragStartX = ref(0);
 const dragStartY = ref(0);
 const winStartLeft = ref(0);
 const winStartTop = ref(0);
+
+const RESTORE_THRESHOLD = 10; // 向下拖拽超过此距离才退出最大化
 
 // ---- resize state ----
 const resizing = ref(false);
@@ -97,7 +101,14 @@ const onClose = () => {
 
 // ---- drag ----
 const onTitlebarMouseDown = (e: MouseEvent) => {
-  if (isMaximized.value) return;
+  if (isMaximized.value) {
+    pendingRestore.value = true;
+    dragStartX.value = e.clientX;
+    dragStartY.value = e.clientY;
+    e.preventDefault();
+    return;
+  }
+
   dragging.value = true;
   dragStartX.value = e.clientX;
   dragStartY.value = e.clientY;
@@ -126,7 +137,29 @@ const onResizeMouseDown = (e: MouseEvent) => {
 
 // ---- shared mouse handlers (bound to document) ----
 const onMouseMove = (e: MouseEvent) => {
+  if (pendingRestore.value) {
+    const dy = e.clientY - dragStartY.value;
+    if (dy <= RESTORE_THRESHOLD) return;
+
+    const s = savedRect.value;
+    const ratioX = dragStartX.value / window.innerWidth;
+
+    width.value = s.width;
+    height.value = s.height;
+    left.value = clampLeft(dragStartX.value - s.width * ratioX);
+    top.value = clampTop(dragStartY.value - 8);
+
+    isMaximized.value = false;
+    isMinimized.value = false;
+    pendingRestore.value = false;
+    dragging.value = true;
+    winStartLeft.value = left.value;
+    winStartTop.value = top.value;
+    return;
+  }
+
   if (dragging.value) {
+    lastMouseY = e.clientY;
     left.value = clampLeft(winStartLeft.value + (e.clientX - dragStartX.value));
     top.value = clampTop(winStartTop.value + (e.clientY - dragStartY.value));
     return;
@@ -185,13 +218,19 @@ const onMouseMove = (e: MouseEvent) => {
   }
 };
 
-const SNAP_TO_TOP_THRESHOLD = 5;
 const TITLEBAR_VISIBLE = 40; // 拖到底部时保留标题栏可见高度
 
+let lastMouseY = 0;
+
 const onMouseUp = () => {
+  if (pendingRestore.value) {
+    pendingRestore.value = false;
+    return;
+  }
+
   if (dragging.value) {
-    // 吸顶 → 自动最大化，保存拖拽前的状态以便还原
-    if (top.value <= SNAP_TO_TOP_THRESHOLD && !isMaximized.value) {
+    // 鼠标拖出屏幕顶部 → 自动最大化
+    if (lastMouseY <= 0 && !isMaximized.value) {
       savedRect.value = {
         left: winStartLeft.value,
         top: winStartTop.value,
@@ -212,6 +251,10 @@ const onMouseUp = () => {
 };
 
 onMounted(() => {
+  left.value = Math.max(0, (window.innerWidth - width.value) / 2);
+  top.value = Math.max(0, (window.innerHeight - height.value) / 2);
+  savedRect.value = { left: left.value, top: top.value, width: width.value, height: height.value };
+
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
 });
@@ -275,7 +318,7 @@ onUnmounted(() => {
 // ---- variables ----
 $titlebar-h: 36px;
 $primary: #e3e3e3;
-$close-hover: #e81123;
+$close-hover: #fa5959;
 $text-color: #000;
 
 .os-window {
@@ -284,7 +327,8 @@ $text-color: #000;
   flex-direction: column;
   border: 1px solid $primary;
   border-radius: 8px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(30px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 
@@ -368,7 +412,7 @@ $text-color: #000;
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.55);
   }
 
   &--close:hover {
@@ -379,7 +423,7 @@ $text-color: #000;
 // ---- body ----
 .os-window__body {
   flex: 1;
-  padding: 16px;
+  padding: 8px 20px;
   overflow: auto;
 }
 

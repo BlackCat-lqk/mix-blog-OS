@@ -5,6 +5,9 @@ import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
 import IMusic from "@/views/IMusic/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
+import { useWallpaperStore } from "@/stores/wallpaper";
+
+const store = useWallpaperStore();
 
 const showWindow = ref(false);
 const activeApp = ref<Array<AppItem>>([]);
@@ -36,7 +39,7 @@ const handleMinimize = (app: AppItem) => {
 </script>
 
 <template>
-  <div class="home">
+  <div class="home" :style="store.current ? { backgroundImage: `url(${store.current})` } : {}">
     <!-- 桌面区域 -->
     <div class="desktop">
       <div class="desktop-app">
@@ -77,6 +80,7 @@ const handleMinimize = (app: AppItem) => {
           :key="idx"
           class="taskbar__item"
           @click="toggleMinimized(app)"
+          ref="dockItems"
         >
           <div class="taskbar__item-icon">
             <img :src="app.icon" alt="icon" />
@@ -93,7 +97,7 @@ const handleMinimize = (app: AppItem) => {
 $taskbar-h: 44px;
 $primary: #0078d4;
 $bg-dark: #1e1e1e;
-$taskbar-bg: #1a1a2e;
+$taskbar-bg: rgba(26, 26, 46, 0.8);
 $text-color: #fff;
 $item-h: 80px;
 $gap: 20px;
@@ -104,6 +108,9 @@ $gap: 20px;
   height: 100vh;
   overflow: hidden;
   background: $bg-dark;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 // ---- 桌面 ----
@@ -166,7 +173,7 @@ $gap: 20px;
   border-top: 1px solid #2a2a3e;
   flex-shrink: 0;
   user-select: none;
-
+  backdrop-filter: blur(20px);
   &__left {
     width: 160px;
     flex-shrink: 0;

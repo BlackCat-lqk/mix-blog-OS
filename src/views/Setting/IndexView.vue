@@ -1,14 +1,68 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { ref } from "vue";
+import SideMenu from "@/components/SidebarMenu.vue";
+import personalizationIcon from "@/assets/icons/personalization.svg";
+import accountIcon from "@/assets/icons/account.svg";
+import PersonalizationView from "./components/PersonalizationView.vue";
+const menuList = [
+  {
+    name: "个性化",
+    icon: personalizationIcon,
+  },
+  {
+    name: "个性化1",
+    icon: personalizationIcon,
+  },
+];
+const focusMenuIdx = ref(0);
+const focusMenuItem = ref("");
+// 菜单点击事件回调
+const clickMenu = (item: { name: string; icon: string }, index: number) => {
+  focusMenuIdx.value = index;
+  focusMenuItem.value = item.name;
+};
+</script>
 
 <template>
-  <div class="index-view">
-    <h1>You did it!</h1>
-    <p>
-      Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-      documentation
-    </p>
-    <p>拖动标题栏移动窗口，拖动边缘/角落调整窗口大小。</p>
+  <div class="index__view">
+    <div class="index__view--menu">
+      <div class="index__view--account">
+        <img :src="accountIcon" alt="logo" />
+        <span>Demo</span>
+      </div>
+      <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
+    </div>
+    <div class="index__view--content">
+      <PersonalizationView v-show="focusMenuIdx == 0"></PersonalizationView>
+    </div>
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.index__view {
+  display: flex;
+  height: 100%;
+  gap: 10px;
+  &--menu {
+    width: 200px;
+    height: 100%;
+  }
+  &--account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    img {
+      width: 56px;
+      height: 56px;
+      padding: 5px;
+      border-radius: 50%;
+      border: 1px solid #ddd;
+      background: #fff;
+    }
+  }
+  &--content {
+    flex: 1;
+  }
+}
+</style>

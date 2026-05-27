@@ -1,0 +1,173 @@
+<script lang="ts" setup>
+import { ref } from "vue";
+import { useWallpaperStore } from "@/stores/wallpaper";
+
+const store = useWallpaperStore();
+const fileInput = ref<HTMLInputElement>();
+
+const triggerUpload = () => {
+  fileInput.value?.click();
+};
+
+const onFileChange = (e: Event) => {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    store.setWallpaper(reader.result as string);
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+};
+</script>
+
+<template>
+  <div class="index-personalozation__view">
+    <div class="index-personalozation--preview">
+      <img v-if="store.current" :src="store.current" alt="preview" />
+      <div class="mask">
+        <div class="line-box">
+          <div class="line" v-for="line in 4" :key="line"></div>
+        </div>
+        <div class="box-btn">
+          <div class="btn"></div>
+        </div>
+      </div>
+    </div>
+    <div class="index-personalozation--history">
+      <span>最近使用的图像</span>
+      <div class="index-personalozation--history--list">
+        <div
+          v-for="(img, idx) in store.history"
+          :key="idx"
+          class="index-personalozation--history--item"
+          :class="{ active: store.current === img }"
+          @click="store.selectWallpaper(img)"
+        >
+          <img :src="img" alt="" />
+        </div>
+        <span v-if="!store.history.length" class="index-personalozation--history--empty">暂无历史记录</span>
+      </div>
+    </div>
+    <!-- 上传图片 -->
+    <div class="index-personalozation--upload">
+      <span>选择一张照片</span>
+      <button class="preview-btn" @click="triggerUpload">浏览照片</button>
+      <input ref="fileInput" type="file" accept="image/*" @change="onFileChange" hidden />
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.index-personalozation {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: start;
+  &--preview {
+    aspect-ratio: 16/9;
+    width: 80%;
+    border: 12px solid #000;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .mask {
+      position: absolute;
+      width: 40%;
+      height: 80%;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      border-radius: 8px;
+      top: 5%;
+      right: 5%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      justify-content: space-between;
+      .line-box {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        .line:last-child {
+          width: 60%;
+        }
+        .line {
+          width: 100%;
+          height: 2px;
+          background: #000;
+        }
+      }
+      .box-btn {
+        width: 100%;
+        height: 30px;
+        display: flex;
+        justify-content: end;
+        .btn {
+          width: 40%;
+          background: #0067c0;
+          border-radius: 4px;
+        }
+      }
+    }
+  }
+  &--history {
+    width: 80%;
+    border: 1px solid #efefef;
+    padding: 10px;
+    &--list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    &--item {
+      width: 90px;
+      height: 90px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      overflow: hidden;
+      &.active {
+        border-color: #0067c0;
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+    &--empty {
+      color: #999;
+      font-size: 12px;
+    }
+  }
+  &--upload {
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #efefef;
+    border-top: unset;
+    padding: 10px;
+    .preview-btn {
+      border: unset;
+      font-size: 14px;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      &:hover {
+        background-color: #f6f6f6;
+      }
+    }
+  }
+}
+</style>
