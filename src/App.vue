@@ -6,7 +6,7 @@ import Setting from "@/views/Setting/IndexView.vue";
 import IMusic from "@/views/IMusic/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
-import defaultWallpaper1 from "@/assets/images/wallpaper/default-wallpaper1.png";
+import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
 
 const store = useWallpaperStore();
 
@@ -18,10 +18,6 @@ const closingAppNames = ref<Array<string | number>>([]);
 
 const toggleMinimized = (app: AppItem) => {
   minimizeWindow.value = minimizeWindow.value.filter((item) => item != app.enName);
-};
-
-const windowVisible = (app: AppItem) => {
-  return !minimizeWindow.value.includes(app.enName) && !closingAppNames.value.includes(app.enName);
 };
 
 // 双击应用
@@ -58,15 +54,21 @@ const handleMinimize = (app: AppItem) => {
   minimizeWindow.value.push(app.enName);
 };
 
-watch(() => store.initialized, (ready) => {
-  if (ready && !store.current) {
-    store.setDefaultWallpaper(defaultWallpaper1);
-  }
-});
+watch(
+  () => store.initialized,
+  (ready) => {
+    if (ready && !store.current) {
+      store.setDefaultWallpaper(defaultWallpaper1);
+    }
+  },
+);
 </script>
 
 <template>
-  <div class="home" :style="(store.initialized && store.current) ? { backgroundImage: `url(${store.current})` } : {}">
+  <div
+    class="home"
+    :style="store.initialized && store.current ? { backgroundImage: `url(${store.current})` } : {}"
+  >
     <!-- 桌面区域 -->
     <div class="desktop">
       <div class="desktop-app">
@@ -81,21 +83,32 @@ watch(() => store.initialized, (ready) => {
         </div>
       </div>
     </div>
-    <OsWindow
-      v-for="(app, idx) in activeApp"
-      :key="idx"
-      @minimize="handleMinimize(app)"
-      :title="app.zhName"
-      :icon="app.icon"
-      @close="handleCloseApp(app)"
-      @click="clickWindow(app)"
-      @mousedown="clickWindow(app)"
-      :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
-      v-os-animate="windowVisible(app)"
-    >
-      <Setting v-if="app.enName == 'Setting'" />
-      <IMusic v-if="app.enName == 'iMusic'" />
-    </OsWindow>
+    <div v-for="(app, idx) in activeApp" :key="idx">
+      <OsWindow
+        @minimize="handleMinimize(app)"
+        :title="app.zhName"
+        :icon="app.icon"
+        @close="handleCloseApp(app)"
+        @click="clickWindow(app)"
+        @mousedown="clickWindow(app)"
+        :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
+        v-show="!minimizeWindow.includes(app.enName) && app.enName == 'Setting'"
+      >
+        <Setting />
+      </OsWindow>
+      <OsWindow
+        @minimize="handleMinimize(app)"
+        :title="app.zhName"
+        :icon="app.icon"
+        @close="handleCloseApp(app)"
+        @click="clickWindow(app)"
+        @mousedown="clickWindow(app)"
+        :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
+        v-show="!minimizeWindow.includes(app.enName) && app.enName == 'iMusic'"
+      >
+        <IMusic />
+      </OsWindow>
+    </div>
     <!-- 底部任务栏 -->
     <div class="taskbar">
       <div class="taskbar__left">

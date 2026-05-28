@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import SideMenu from "@/components/SidebarMenu.vue";
-import personalizationIcon from "@/assets/icons/personalization.svg";
-import accountIcon from "@/assets/icons/account.svg";
+import personalizationIcon from "@/assets/setting/icons/personalization.svg";
+import accountIcon from "@/assets/setting/icons/account.svg";
 import PersonalizationView from "./components/PersonalizationView.vue";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 const menuList = [

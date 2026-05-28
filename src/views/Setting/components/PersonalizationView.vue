@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import { useWallpaperStore } from "@/stores/wallpaper";
-import defaultWallpaper1 from "@/assets/images/wallpaper/default-wallpaper1.png";
-import defaultWallpaper2 from "@/assets/images/wallpaper/default-wallpaper2.png";
-import defaultWallpaper3 from "@/assets/images/wallpaper/default-wallpaper3.png";
+import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
+import defaultWallpaper2 from "@/assets/setting/images/wallpaper/default-wallpaper2.png";
+import defaultWallpaper3 from "@/assets/setting/images/wallpaper/default-wallpaper3.png";
 
 const store = useWallpaperStore();
 const fileInput = ref<HTMLInputElement>();
