@@ -4,13 +4,10 @@ import SideMenu from "@/components/SidebarMenu.vue";
 import personalizationIcon from "@/assets/icons/personalization.svg";
 import accountIcon from "@/assets/icons/account.svg";
 import PersonalizationView from "./components/PersonalizationView.vue";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 const menuList = [
   {
     name: "个性化",
-    icon: personalizationIcon,
-  },
-  {
-    name: "个性化1",
     icon: personalizationIcon,
   },
 ];
@@ -28,13 +25,24 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
     <div class="index__view--menu">
       <div class="index__view--account">
         <img :src="accountIcon" alt="logo" />
-        <span>Demo</span>
+        <span>K</span>
       </div>
       <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
     </div>
-    <div class="index__view--content">
-      <PersonalizationView v-show="focusMenuIdx == 0"></PersonalizationView>
-    </div>
+    <OverlayScrollbarsComponent
+      defer
+      style="flex: 1"
+      :options="{
+        scrollbars: {
+          autoHide: 'move',
+          autoHideDelay: 100,
+        },
+      }"
+    >
+      <div class="index__view--content">
+        <PersonalizationView v-show="focusMenuIdx == 0"></PersonalizationView>
+      </div>
+    </OverlayScrollbarsComponent>
   </div>
 </template>
 
@@ -42,9 +50,10 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
 .index__view {
   display: flex;
   height: 100%;
-  gap: 10px;
+  gap: 20px;
   &--menu {
     width: 200px;
+    min-width: 200px;
     height: 100%;
   }
   &--account {
@@ -63,6 +72,10 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
   }
   &--content {
     flex: 1;
+    display: flex;
+    justify-content: center;
+    overflow: auto;
+    padding: 0 10px;
   }
 }
 </style>

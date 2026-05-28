@@ -30,7 +30,8 @@ const handleMenu = (menu: { name: string; icon: string }, index: number) => {
 </template>
 
 <style scoped lang="scss">
-$menu-item-hover-color: #f5f5f5;
+$menu-item-hover-color: #eaeaea;
+$menu-item-active-color: #0067c0;
 .menu-list {
   overflow-y: auto;
   display: flex;
@@ -58,7 +59,7 @@ $menu-item-hover-color: #f5f5f5;
       height: 50%;
       top: 0;
       left: 0;
-      background-color: #0067c0;
+      background-color: $menu-item-active-color;
       border-radius: 8px;
       transform: translateY(50%);
     }

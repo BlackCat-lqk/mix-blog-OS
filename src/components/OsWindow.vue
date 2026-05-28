@@ -12,9 +12,10 @@ const emit = defineEmits<{ close: []; minimize: [] }>();
 
 const isMinimized = defineModel<boolean>("minimized", { default: false });
 
-const MIN_WIDTH = 300;
-const MIN_HEIGHT = 200;
+const MIN_WIDTH = 350;
+const MIN_HEIGHT = 320;
 const MIN_VISIBLE = 150;
+const EMPTY_STYLE = Object.freeze({});
 
 // ---- window state ----
 const isMaximized = ref(false);
@@ -22,9 +23,9 @@ const isMaximized = ref(false);
 // ---- position & size ----
 const left = ref(100);
 const top = ref(100);
-const width = ref(1056);
-const height = ref(702);
-const savedRect = ref({ left: 100, top: 100, width: 1056, height: 702 });
+const width = ref(960);
+const height = ref(540);
+const savedRect = ref({ left: 100, top: 100, width: 960, height: 540 });
 
 // ---- drag state ----
 const dragging = ref(false);
@@ -38,8 +39,18 @@ const RESTORE_THRESHOLD = 10; // 向下拖拽超过此距离才退出最大化
 
 // ---- resize state ----
 const resizing = ref(false);
-const resizeDir = ref("");
-const rs = ref({ x: 0, y: 0, left: 0, top: 0, width: 0, height: 0 });
+const rs = ref({
+  x: 0,
+  y: 0,
+  left: 0,
+  top: 0,
+  width: 0,
+  height: 0,
+  n: false,
+  s: false,
+  e: false,
+  w: false,
+});
 
 // ---- clamp helpers ----
 const clampLeft = (value: number) => {
@@ -52,7 +63,7 @@ const clampTop = (value: number) => Math.max(0, value);
 
 // ---- computed ----
 const windowStyle = computed(() => {
-  if (isMaximized.value) return {};
+  if (isMaximized.value) return EMPTY_STYLE;
   return {
     left: `${left.value}px`,
     top: `${top.value}px`,
@@ -71,8 +82,6 @@ const windowClass = computed(() => ({
 
 // ---- minimize / maximize / close ----
 const toggleMinimize = () => {
-  // isMinimized.value = !isMinimized.value;
-  // if (isMinimized.value) isMaximized.value = false;
   emit("minimize");
 };
 
@@ -122,7 +131,6 @@ const onResizeMouseDown = (e: MouseEvent) => {
   const dir = (e.currentTarget as HTMLElement).dataset.resize;
   if (!dir || isMaximized.value) return;
   resizing.value = true;
-  resizeDir.value = dir;
   rs.value = {
     x: e.clientX,
     y: e.clientY,
@@ -130,13 +138,33 @@ const onResizeMouseDown = (e: MouseEvent) => {
     top: top.value,
     width: width.value,
     height: height.value,
+    n: dir.includes("n"),
+    s: dir.includes("s"),
+    e: dir.includes("e"),
+    w: dir.includes("w"),
   };
   e.preventDefault();
   e.stopPropagation();
 };
 
 // ---- shared mouse handlers (bound to document) ----
+let rafId = 0;
+let pendingEvent: MouseEvent | null = null;
+
 const onMouseMove = (e: MouseEvent) => {
+  pendingEvent = e;
+  if (dragging.value) lastMouseY = e.clientY;
+  if (!rafId) {
+    rafId = requestAnimationFrame(processMouseMove);
+  }
+};
+
+const processMouseMove = () => {
+  rafId = 0;
+  const e = pendingEvent;
+  if (!e) return;
+  pendingEvent = null;
+
   if (pendingRestore.value) {
     const dy = e.clientY - dragStartY.value;
     if (dy <= RESTORE_THRESHOLD) return;
@@ -159,7 +187,6 @@ const onMouseMove = (e: MouseEvent) => {
   }
 
   if (dragging.value) {
-    lastMouseY = e.clientY;
     left.value = clampLeft(winStartLeft.value + (e.clientX - dragStartX.value));
     top.value = clampTop(winStartTop.value + (e.clientY - dragStartY.value));
     return;
@@ -168,43 +195,43 @@ const onMouseMove = (e: MouseEvent) => {
   if (resizing.value) {
     const dx = e.clientX - rs.value.x;
     const dy = e.clientY - rs.value.y;
-    const dir = resizeDir.value;
+    const { n, s, e: isE, w } = rs.value;
 
     let nl = rs.value.left;
     let nt = rs.value.top;
     let nw = rs.value.width;
     let nh = rs.value.height;
 
-    if (dir.includes("e")) nw = rs.value.width + dx;
-    if (dir.includes("s")) nh = rs.value.height + dy;
-    if (dir.includes("w")) {
+    if (isE) nw = rs.value.width + dx;
+    if (s) nh = rs.value.height + dy;
+    if (w) {
       nl = rs.value.left + dx;
       nw = rs.value.width - dx;
     }
-    if (dir.includes("n")) {
+    if (n) {
       nt = rs.value.top + dy;
       nh = rs.value.height - dy;
     }
 
     // enforce minimum size
-    if (dir.includes("w") && nw < MIN_WIDTH) {
+    if (w && nw < MIN_WIDTH) {
       nl = rs.value.left + rs.value.width - MIN_WIDTH;
       nw = MIN_WIDTH;
     }
-    if (!dir.includes("w") && nw < MIN_WIDTH) nw = MIN_WIDTH;
-    if (dir.includes("n") && nh < MIN_HEIGHT) {
+    if (!w && nw < MIN_WIDTH) nw = MIN_WIDTH;
+    if (n && nh < MIN_HEIGHT) {
       nt = rs.value.top + rs.value.height - MIN_HEIGHT;
       nh = MIN_HEIGHT;
     }
-    if (!dir.includes("n") && nh < MIN_HEIGHT) nh = MIN_HEIGHT;
+    if (!n && nh < MIN_HEIGHT) nh = MIN_HEIGHT;
 
     // enforce boundary: keep titlebar visible
     if (nt < 0) {
-      if (dir.includes("n")) nh += nt;
+      if (n) nh += nt;
       nt = 0;
     }
     if (nl < 0) {
-      if (dir.includes("w")) nw += nl;
+      if (w) nw += nl;
       nl = 0;
     }
 
@@ -260,6 +287,10 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (rafId) cancelAnimationFrame(rafId);
+  dragging.value = false;
+  resizing.value = false;
+  pendingRestore.value = false;
   document.removeEventListener("mousemove", onMouseMove);
   document.removeEventListener("mouseup", onMouseUp);
 });
@@ -308,6 +339,7 @@ onUnmounted(() => {
     </div>
 
     <!-- body -->
+
     <div class="os-window__body">
       <slot />
     </div>
@@ -338,10 +370,7 @@ $text-color: #000;
     user-select: none;
   }
 
-  // 最小化：整个窗口隐藏，仅任务栏保留入口
-  &--minimized {
-    display: none;
-  }
+  // 最小化：由 v-os-animate 指令控制显隐动画
 
   // 最大化：全屏铺满
   &--maximized {
@@ -424,7 +453,8 @@ $text-color: #000;
 .os-window__body {
   flex: 1;
   padding: 8px 20px;
-  overflow: auto;
+  overflow: hidden;
+  padding-right: 2px;
 }
 
 // ---- resize handles ----

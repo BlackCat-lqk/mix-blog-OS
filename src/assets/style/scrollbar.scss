@@ -1,0 +1,56 @@
+/* 自定义滚动条 — 替代浏览器默认样式 */
+/* 使用方式: 在目标容器上添加 class="custom-scrollbar" 或直接 @use 引入到全局 */
+
+// ---- CSS 变量（可按需覆盖）----
+:root {
+  --scrollbar-size: 3px;
+  --scrollbar-radius: 2px;
+  --scrollbar-thumb: #898987;
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 1);
+  --scrollbar-track: transparent;
+  --scrollbar-track-hover: rgba(0, 0, 0, 0.05);
+}
+
+// ---- mixin: 应用于需要自定义滚动条的元素 ----
+@mixin custom-scrollbar {
+  // WebKit (Chrome / Edge / Safari)
+  &::-webkit-scrollbar {
+    width: var(--scrollbar-size);
+    height: var(--scrollbar-size);
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: var(--scrollbar-radius);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--scrollbar-radius);
+    transition: background 0.2s;
+
+    &:hover {
+      background: var(--scrollbar-thumb-hover);
+    }
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  // hover 时才显示轨道
+  &:not(:hover)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+// ---- 全局应用（按需启用）----
+// 如果要全局替换所有滚动条，取消下面的注释：
+* {
+  @include custom-scrollbar;
+}
+
+// ---- 按需类名 ----
+// 在需要的容器加上类名class="custom-scrollbar"
+.custom-scrollbar {
+  @include custom-scrollbar;
+}

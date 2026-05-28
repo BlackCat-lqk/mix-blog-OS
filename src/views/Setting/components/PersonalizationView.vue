@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import { useWallpaperStore } from "@/stores/wallpaper";
+import defaultWallpaper1 from "@/assets/images/wallpaper/default-wallpaper1.png";
+import defaultWallpaper2 from "@/assets/images/wallpaper/default-wallpaper2.png";
+import defaultWallpaper3 from "@/assets/images/wallpaper/default-wallpaper3.png";
 
 const store = useWallpaperStore();
 const fileInput = ref<HTMLInputElement>();
@@ -19,7 +22,7 @@ const onFileChange = (e: Event) => {
     store.setWallpaper(reader.result as string);
   };
   reader.readAsDataURL(file);
-  input.value = '';
+  input.value = "";
 };
 </script>
 
@@ -36,6 +39,21 @@ const onFileChange = (e: Event) => {
         </div>
       </div>
     </div>
+    <!-- 默认壁纸 -->
+    <div class="index-personalozation--default">
+      <div class="title">默认壁纸</div>
+      <div class="list">
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper1)">
+          <img :src="defaultWallpaper1" alt="item" />
+        </div>
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper2)">
+          <img :src="defaultWallpaper2" alt="item" />
+        </div>
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper3)">
+          <img :src="defaultWallpaper3" alt="item" />
+        </div>
+      </div>
+    </div>
     <div class="index-personalozation--history">
       <span>最近使用的图像</span>
       <div class="index-personalozation--history--list">
@@ -48,7 +66,9 @@ const onFileChange = (e: Event) => {
         >
           <img :src="img" alt="" />
         </div>
-        <span v-if="!store.history.length" class="index-personalozation--history--empty">暂无历史记录</span>
+        <span v-if="!store.history.length" class="index-personalozation--history--empty"
+          >暂无历史记录</span
+        >
       </div>
     </div>
     <!-- 上传图片 -->
@@ -71,6 +91,7 @@ const onFileChange = (e: Event) => {
   &--preview {
     aspect-ratio: 16/9;
     width: 80%;
+    max-width: 768px;
     border: 12px solid #000;
     margin: 20px 0;
     border-radius: 12px;
@@ -120,10 +141,36 @@ const onFileChange = (e: Event) => {
       }
     }
   }
+  &--default {
+    padding: 10px 0;
+    .list {
+      width: 80%;
+      max-width: 768px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .item {
+      width: 160px;
+      height: 90px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      overflow: hidden;
+      &.active {
+        border-color: #0067c0;
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
   &--history {
     width: 80%;
-    border: 1px solid #efefef;
-    padding: 10px;
+    max-width: 768px;
+    padding: 10px 0;
     &--list {
       display: flex;
       gap: 10px;
@@ -152,12 +199,11 @@ const onFileChange = (e: Event) => {
   }
   &--upload {
     width: 80%;
+    max-width: 768px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #efefef;
-    border-top: unset;
-    padding: 10px;
+    padding: 10px 0;
     .preview-btn {
       border: unset;
       font-size: 14px;

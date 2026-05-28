@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import appConfig from "@/config/index.ts";
+import { ref, watch } from "vue";
+import appConfig from "@/config/index";
 import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
 import IMusic from "@/views/IMusic/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
+import defaultWallpaper1 from "@/assets/images/wallpaper/default-wallpaper1.png";
 
 const store = useWallpaperStore();
 
@@ -13,11 +14,25 @@ const showWindow = ref(false);
 const activeApp = ref<Array<AppItem>>([]);
 const focusWindow = ref<string | number>("");
 const minimizeWindow = ref<Array<string | number>>([]);
+const closingAppNames = ref<Array<string | number>>([]);
+
 const toggleMinimized = (app: AppItem) => {
   minimizeWindow.value = minimizeWindow.value.filter((item) => item != app.enName);
 };
+
+const windowVisible = (app: AppItem) => {
+  return !minimizeWindow.value.includes(app.enName) && !closingAppNames.value.includes(app.enName);
+};
+
 // 双击应用
 const handleClickApp = (app: AppItem) => {
+  // 取消正在进行的关闭动画
+  closingAppNames.value = closingAppNames.value.filter((n) => n !== app.enName);
+
+  // 应用是否已打开
+  if (activeApp.value.some((item) => item.enName === app.enName)) {
+    return;
+  }
   activeApp.value.push(app);
   showWindow.value = true;
 };
@@ -27,19 +42,31 @@ const clickWindow = (app: AppItem) => {
   focusWindow.value = app.enName;
 };
 
-// 关闭应用
+// 关闭应用：先触发关闭动画，后移除
 const handleCloseApp = (app: AppItem) => {
-  activeApp.value = activeApp.value.filter((item) => item.enName !== app.enName);
+  closingAppNames.value.push(app.enName);
+  setTimeout(() => {
+    if (closingAppNames.value.includes(app.enName)) {
+      activeApp.value = activeApp.value.filter((item) => item.enName !== app.enName);
+      closingAppNames.value = closingAppNames.value.filter((n) => n !== app.enName);
+    }
+  }, 200);
 };
 
 // 最小化应用
 const handleMinimize = (app: AppItem) => {
   minimizeWindow.value.push(app.enName);
 };
+
+watch(() => store.initialized, (ready) => {
+  if (ready && !store.current) {
+    store.setDefaultWallpaper(defaultWallpaper1);
+  }
+});
 </script>
 
 <template>
-  <div class="home" :style="store.current ? { backgroundImage: `url(${store.current})` } : {}">
+  <div class="home" :style="(store.initialized && store.current) ? { backgroundImage: `url(${store.current})` } : {}">
     <!-- 桌面区域 -->
     <div class="desktop">
       <div class="desktop-app">
@@ -64,7 +91,7 @@ const handleMinimize = (app: AppItem) => {
       @click="clickWindow(app)"
       @mousedown="clickWindow(app)"
       :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
-      v-show="!minimizeWindow.includes(app.enName)"
+      v-os-animate="windowVisible(app)"
     >
       <Setting v-if="app.enName == 'Setting'" />
       <IMusic v-if="app.enName == 'iMusic'" />
