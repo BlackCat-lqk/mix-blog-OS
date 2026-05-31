@@ -83,32 +83,23 @@ watch(
         </div>
       </div>
     </div>
-    <div v-for="(app, idx) in activeApp" :key="idx">
-      <OsWindow
-        @minimize="handleMinimize(app)"
-        :title="app.zhName"
-        :icon="app.icon"
-        @close="handleCloseApp(app)"
-        @click="clickWindow(app)"
-        @mousedown="clickWindow(app)"
-        :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
-        v-show="!minimizeWindow.includes(app.enName) && app.enName == 'Setting'"
-      >
-        <Setting />
-      </OsWindow>
-      <OsWindow
-        @minimize="handleMinimize(app)"
-        :title="app.zhName"
-        :icon="app.icon"
-        @close="handleCloseApp(app)"
-        @click="clickWindow(app)"
-        @mousedown="clickWindow(app)"
-        :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
-        v-show="!minimizeWindow.includes(app.enName) && app.enName == 'iMusic'"
-      >
-        <IMusic />
-      </OsWindow>
-    </div>
+
+    <OsWindow
+      v-for="(app, idx) in activeApp"
+      :key="idx"
+      @minimize="handleMinimize(app)"
+      :title="app.zhName"
+      :icon="app.icon"
+      @close="handleCloseApp(app)"
+      @click="clickWindow(app)"
+      @mousedown="clickWindow(app)"
+      :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
+      v-show="!minimizeWindow.includes(app.enName)"
+    >
+      <Setting v-if="app.enName === 'Setting'" />
+      <IMusic v-else-if="app.enName === 'iMusic'" />
+    </OsWindow>
+
     <!-- 底部任务栏 -->
     <div class="taskbar">
       <div class="taskbar__left">

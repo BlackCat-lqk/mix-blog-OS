@@ -10,11 +10,11 @@
       >
         <img
           v-if="route.path === '/'"
-          src="@/assets/icon/HomeActive.svg"
+          src="@/assets/iMusic/icons/HomeActive.svg"
           alt=""
           class="pc-rail-icon"
         />
-        <img v-else src="@/assets/icon/Home.svg" alt="" class="pc-rail-icon" />
+        <img v-else src="@/assets/iMusic/icons/Home.svg" alt="" class="pc-rail-icon" />
         <span>浏览</span>
       </button>
       <button
@@ -25,18 +25,18 @@
       >
         <img
           v-if="isLibrary && !visibleSetting"
-          src="@/assets/icon/MusicLibraryActive.svg"
+          src="@/assets/iMusic/icons/MusicLibraryActive.svg"
           class="pc-rail-icon"
         />
-        <img v-else src="@/assets/icon/MusicLibrary.svg" class="pc-rail-icon" />
+        <img v-else src="@/assets/iMusic/icons/MusicLibrary.svg" class="pc-rail-icon" />
         <span>歌曲</span>
       </button>
       <button type="button" class="pc-rail-item">
-        <img src="@/assets/icon/musicAlbum.svg" alt="" class="pc-rail-icon" />
+        <img src="@/assets/iMusic/icons/musicAlbum.svg" alt="" class="pc-rail-icon" />
         <span>专辑</span>
       </button>
       <button type="button" class="pc-rail-item">
-        <img src="@/assets/icon/artists.svg" alt="" class="pc-rail-icon" />
+        <img src="@/assets/iMusic/icons/artists.svg" alt="" class="pc-rail-icon" />
         <span>艺术家</span>
       </button>
     </nav>
@@ -44,11 +44,11 @@
     <nav class="pc-rail-nav">
       <h3>我的音乐</h3>
       <button type="button" class="pc-rail-item">
-        <img src="@/assets/icon/Recents.svg" alt="" class="pc-rail-icon" />
+        <img src="@/assets/iMusic/icons/Recents.svg" alt="" class="pc-rail-icon" />
         <span>最近播放</span>
       </button>
       <button type="button" class="pc-rail-item">
-        <img src="@/assets/icon/likeWhite.svg" alt="" class="pc-rail-icon" />
+        <img src="@/assets/iMusic/icons/likeWhite.svg" alt="" class="pc-rail-icon" />
         <span>喜欢的歌曲</span>
       </button>
     </nav>
@@ -58,8 +58,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useUserInfoStore } from '@/stores/userInfo'
-import { useEventStore } from '@/stores/eventStore'
+import { useUserInfoStore } from '@/stores/iMusic/userInfo'
+import { useEventStore } from '@/stores/iMusic/eventStore'
 
 const route = useRoute()
 const router = useRouter()

@@ -22,7 +22,7 @@
         </div>
         <div class="inform inform-duration">
           <span class="duration">{{ formatSeconds(item.duration || 0) }}</span>
-          <img src="@/assets/icon/moreheng.svg" />
+          <img src="@/assets/iMusic/icons/moreheng.svg" />
         </div>
       </div>
     </div>
@@ -31,9 +31,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useEventStore } from '@/stores/eventStore'
+import { useEventStore } from '@/stores/iMusic/eventStore'
 const eventStore = useEventStore()
-import { getMusicApi } from '@/server/musicHttp'
+import { getMusicApi } from '@/server/iMusic/musicHttp'
 import { formatSeconds } from '@/utils/publickFun'
 
 interface MusicItem {

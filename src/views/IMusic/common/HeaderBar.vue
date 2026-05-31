@@ -64,7 +64,7 @@
     </template>
   </MessageNotification>
   <!-- <UserLogin v-model:visible="visibleLogin" title="Login" /> -->
-  <SeetingView v-model:show="visibleSetting" />
+  <!-- <SeetingView v-model:show="visibleSetting" /> -->
 </template>
 
 <script setup lang="ts">
@@ -75,7 +75,7 @@ import MessageNotification from "./DialogNotification.vue";
 // import UserLogin from "./UserLogin.vue";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
 import { useEventStore } from "@/stores/iMusic/eventStore";
-import SeetingView from "@/views/Setting/IndexView.vue";
+// import SeetingView from "@/views/Setting/IndexView.vue";
 
 const eventStore = useEventStore();
 const userInfoStore = useUserInfoStore();

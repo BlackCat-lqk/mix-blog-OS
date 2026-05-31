@@ -1,7 +1,7 @@
 <template>
   <aside class="song-status">
     <div class="status-head">
-      <img src="@/assets/icon/playing.svg" />
+      <img src="@/assets/iMusic/icons/playing.svg" />
       <span>Now Playing</span>
     </div>
 
@@ -13,7 +13,7 @@
         <div class="song-name">{{ currentSong?.title || '暂无播放' }}</div>
         <div class="song-artist">{{ currentSong?.artist || ' ' }}</div>
         <button type="button" class="queue-btn" aria-label="打开播放详情" @click="handleOpenDetail">
-          <img src="@/assets/icon/meun.svg" alt="" />
+          <img src="@/assets/iMusic/icons/meun.svg" alt="" />
         </button>
       </div>
     </div>
@@ -41,8 +41,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useEventStore } from '@/stores/eventStore'
-import defaultCover from '@/assets/images/cover.jpg'
+import { useEventStore } from '@/stores/iMusic/eventStore'
+import defaultCover from '@/assets/iMusic/images/cover.jpg'
 import { formatTime } from '@/utils/formatTime'
 
 interface MusicItem {

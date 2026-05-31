@@ -1,13 +1,13 @@
 <template>
   <div class="home-box">
     <div class="home-content">
-      <!-- <header class="home-page-header">
+      <header class="home-page-header">
         <h1 class="home-title">发现音乐</h1>
         <p class="home-subtitle">搜索曲目或在下方浏览推荐播放列表</p>
       </header>
 
       <div class="search-box">
-        <img src="@/assets/icon/Search.svg" alt="" class="search-icon" />
+        <img src="@/assets/iMusic/icons/Search.svg" alt="" class="search-icon" />
         <input
           type="text"
           class="search-input"
@@ -48,9 +48,9 @@
       <div class="search-empty" v-if="searchTip">
         <span>暂无匹配结果</span>
       </div>
-      <LoadingView v-if="loading" /> -->
+      <LoadingView v-if="loading" />
       <div class="banner-box">
-        <img src="@/assets/images/banner.jpg" />
+        <img src="@/assets/iMusic/images/banner.jpg" />
       </div>
       <PlayList />
     </div>
@@ -58,62 +58,62 @@
 </template>
 
 <script setup lang="ts">
-// import { ref } from 'vue'
-// import { searchMusicApi } from '@/server/musicHttp'
-// import { _debounce } from '@/utils/publickFun'
+import { ref } from 'vue'
+import { searchMusicApi } from '@/server/iMusic/musicHttp'
+import { _debounce } from '@/utils/publickFun'
 import PlayList from './common/PlayList.vue'
-// import { useEventStore } from '@/stores/eventStore'
-// import LoadingView from '../common/LoadingView.vue'
+import { useEventStore } from '@/stores/iMusic/eventStore'
+import LoadingView from '../common/LoadingView.vue'
 
-// const eventStore = useEventStore()
-// const keyword = ref('')
-// const searchTip = ref(false)
-// const loading = ref(false)
-// const searchMusicData = ref([] as MusicItem[])
+const eventStore = useEventStore()
+const keyword = ref('')
+const searchTip = ref(false)
+const loading = ref(false)
+const searchMusicData = ref([] as MusicItem[])
 
-// interface MusicItem {
-//   id?: number
-//   title: string
-//   artist?: string
-//   audioUrl?: string
-//   duration?: number
-//   coverUrl?: string
-//   lyricsUrl?: string
-// }
+interface MusicItem {
+  id?: number
+  title: string
+  artist?: string
+  audioUrl?: string
+  duration?: number
+  coverUrl?: string
+  lyricsUrl?: string
+}
 
-// const searchSongs = _debounce(async () => {
-//   if (keyword.value.length < 1) {
-//     searchMusicData.value = []
-//     searchTip.value = false
-//     return
-//   }
-//   loading.value = true
-//   const response = await searchMusicApi({ keyword: keyword.value })
-//   const res = response.data
-//   if (res.length > 0) {
-//     searchTip.value = false
-//     searchMusicData.value = res
-//   } else {
-//     searchTip.value = true
-//     searchMusicData.value = []
-//   }
-//   loading.value = false
-// }, 600)
+const searchSongs = _debounce(async () => {
+  if (keyword.value.length < 1) {
+    searchMusicData.value = []
+    searchTip.value = false
+    return
+  }
+  loading.value = true
+  const response = await searchMusicApi({ keyword: keyword.value })
+  const res = response.data
+  if (res.length > 0) {
+    searchTip.value = false
+    searchMusicData.value = res
+  } else {
+    searchTip.value = true
+    searchMusicData.value = []
+  }
+  loading.value = false
+}, 600)
 
-// const clearSearch = () => {
-//   keyword.value = ''
-//   searchMusicData.value = []
-//   searchTip.value = false
-//   loading.value = false
-// }
+const clearSearch = () => {
+  keyword.value = ''
+  searchMusicData.value = []
+  searchTip.value = false
+  loading.value = false
+}
 
-// const hanleSongDetail = (idx: number) => {
-//   eventStore.setShow(true)
-//   eventStore.setCurrentIndex(idx)
-//   eventStore.setData(searchMusicData.value)
-//   eventStore.controlPlay(true)
-//   eventStore.outControlPlay(true)
-// }
+const hanleSongDetail = (idx: number) => {
+  eventStore.setShow(true)
+  eventStore.setCurrentIndex(idx)
+  eventStore.setData(searchMusicData.value)
+  eventStore.controlPlay(true)
+  eventStore.outControlPlay(true)
+}
 </script>
 
 <style scoped lang="scss">

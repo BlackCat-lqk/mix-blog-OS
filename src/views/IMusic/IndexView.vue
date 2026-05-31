@@ -7,7 +7,8 @@
       </div>
       <div class="app-layout">
         <div class="app-router">
-          <RouterView />
+          <!-- <RouterView /> -->
+           <Home></Home>
         </div>
         <div class="song-status" ref="routerViewRef">
           <SongStatus />
@@ -15,17 +16,19 @@
       </div>
     </div>
     <div ref="playMainWindowRef" class="play-main-window-box">
-      <PlayWindow />
+      <!-- <PlayWindow /> -->
     </div>
-    <PlayDetail />
+    <!-- <PlayDetail /> -->
+    hahah
   </div>
 </template>
 <script setup lang="ts">
 // import PlayWindow from "./common/PlayWindow.vue";
 // import PlayDetail from "./common/PlayDetail.vue";
+import Home from "./Home/IndexView.vue";
 import HeaderBar from "./common/HeaderBar.vue";
-// import PcAppRail from "./common/PcAppRail.vue";
-// import SongStatus from "./common/SongStatus.vue";
+import PcAppRail from "./common/PcAppRail.vue";
+import SongStatus from "./common/SongStatus.vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const playMainWindowRef = ref<HTMLElement | null>(null);

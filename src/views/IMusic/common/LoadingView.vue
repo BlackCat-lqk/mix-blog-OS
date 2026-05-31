@@ -2,7 +2,7 @@
   <div>
     <div class="loading-container">
       <div class="loading-content">
-        <img src="@/assets/icon/loading.svg" alt="loading" />
+        <img src="@/assets/iMusic/icons/loading.svg" alt="loading" />
         <div class="loading-text">Loading...</div>
       </div>
     </div>
