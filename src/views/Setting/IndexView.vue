@@ -51,6 +51,7 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
   display: flex;
   height: 100%;
   gap: 20px;
+  padding: 0px 2px 10px 10px;
   &--menu {
     width: 200px;
     min-width: 200px;

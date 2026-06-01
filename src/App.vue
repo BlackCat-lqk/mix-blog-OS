@@ -14,22 +14,37 @@ const showWindow = ref(false);
 const activeApp = ref<Array<AppItem>>([]);
 const focusWindow = ref<string | number>("");
 const minimizeWindow = ref<Array<string | number>>([]);
-const closingAppNames = ref<Array<string | number>>([]);
 
 const toggleMinimized = (app: AppItem) => {
-  minimizeWindow.value = minimizeWindow.value.filter((item) => item != app.enName);
+  // 是否已经显示，已经显示就给最小化，没有就取消
+  if (minimizeWindow.value.includes(app.enName)) {
+    minimizeWindow.value = minimizeWindow.value.filter((item) => item != app.enName);
+  } else {
+    // 只有当focusWindow==app.enName时，才会最小化，否则将只是移到最顶层
+    if (focusWindow.value == app.enName) {
+      minimizeWindow.value.push(app.enName);
+    } else {
+      focusWindow.value = app.enName;
+    }
+  }
 };
 
 // 双击应用
 const handleClickApp = (app: AppItem) => {
-  // 取消正在进行的关闭动画
-  closingAppNames.value = closingAppNames.value.filter((n) => n !== app.enName);
-
   // 应用是否已打开
   if (activeApp.value.some((item) => item.enName === app.enName)) {
+    if (minimizeWindow.value.includes(app.enName)) {
+      // 应用处于最小化状态
+      toggleMinimized(app);
+    } else {
+      // 应用处于活跃状态
+      focusWindow.value = app.enName;
+    }
     return;
   }
   activeApp.value.push(app);
+  // 焦点窗口设置为最新打开的窗口，保持层级最大
+  focusWindow.value = app.enName;
   showWindow.value = true;
 };
 
@@ -40,13 +55,7 @@ const clickWindow = (app: AppItem) => {
 
 // 关闭应用：先触发关闭动画，后移除
 const handleCloseApp = (app: AppItem) => {
-  closingAppNames.value.push(app.enName);
-  setTimeout(() => {
-    if (closingAppNames.value.includes(app.enName)) {
-      activeApp.value = activeApp.value.filter((item) => item.enName !== app.enName);
-      closingAppNames.value = closingAppNames.value.filter((n) => n !== app.enName);
-    }
-  }, 200);
+  activeApp.value = activeApp.value.filter((item) => item.enName !== app.enName);
 };
 
 // 最小化应用
@@ -191,6 +200,11 @@ $gap: 20px;
     pointer-events: none;
     // 文字阴影保证在浅色壁纸下可读
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 8px;
   }
 }
 

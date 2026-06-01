@@ -54,7 +54,7 @@
 
 <script lang="ts" setup>
 import { reactive, ref } from "vue";
-import DialogNotification from "@/components/DialogNotification.vue";
+import DialogNotification from "./DialogNotification.vue";
 import { loginUserApi } from "@/server/iMusic/userHttp";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
 const notificationVisible = ref(false);

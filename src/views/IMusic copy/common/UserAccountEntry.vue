@@ -97,7 +97,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="scss">
-$text-color: #000;
 .user-account-entry {
   position: relative;
   width: 100%;
@@ -118,11 +117,10 @@ $text-color: #000;
 
 .avatar-wrap {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: 1px solid #d8d8d8;
-  background-color: #d8d8d8;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -137,7 +135,7 @@ $text-color: #000;
 
 .user-label {
   font-size: 13px;
-  color: $text-color;
+  color: #e8e8e8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -197,6 +195,7 @@ $text-color: #000;
 .user-account-entry[data-variant="rail"] {
   padding: 12px 10px;
   border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
   transition: background 0.15s ease;
   box-sizing: border-box;
 
@@ -207,6 +206,37 @@ $text-color: #000;
   .user-account-menu {
     left: 0;
     top: 100%;
+  }
+}
+
+/* 移动端抽屉：与侧栏宽度对齐，菜单在头像下方 */
+.user-account-entry[data-variant="sidebar"] {
+  margin-bottom: 4px;
+
+  .avatar-wrap {
+    width: 30px;
+    height: 30px;
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .user-label {
+    font-size: 16px;
+    color: #fff;
+  }
+
+  .user-account-menu {
+    left: 0;
+    top: 100%;
+    margin-top: 8px;
+    width: max-content;
+    min-width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (min-width: 900px) {
+  .user-account-entry[data-variant="sidebar"] .user-account-menu {
+    min-width: 220px;
   }
 }
 </style>

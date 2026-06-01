@@ -92,6 +92,7 @@ const toggleMaximize = () => {
     top.value = s.top;
     width.value = s.width;
     height.value = s.height;
+    isMaximized.value = false;
   } else {
     savedRect.value = {
       left: left.value,
@@ -99,8 +100,8 @@ const toggleMaximize = () => {
       width: width.value,
       height: height.value,
     };
+    isMaximized.value = true;
   }
-  isMaximized.value = !isMaximized.value;
   isMinimized.value = false;
 };
 
@@ -151,9 +152,14 @@ const onResizeMouseDown = (e: MouseEvent) => {
 let rafId = 0;
 let pendingEvent: MouseEvent | null = null;
 
+let hasMoved = false;
+
 const onMouseMove = (e: MouseEvent) => {
   pendingEvent = e;
-  if (dragging.value) lastMouseY = e.clientY;
+  if (dragging.value) {
+    lastMouseY = e.clientY;
+    hasMoved = true;
+  }
   if (!rafId) {
     rafId = requestAnimationFrame(processMouseMove);
   }
@@ -256,8 +262,8 @@ const onMouseUp = () => {
   }
 
   if (dragging.value) {
-    // 鼠标拖出屏幕顶部 → 自动最大化
-    if (lastMouseY <= 0 && !isMaximized.value) {
+    // 鼠标拖出屏幕顶部 → 自动最大化（仅在窗口确实被拖拽移动过时触发）
+    if (hasMoved && lastMouseY <= 0 && !isMaximized.value) {
       savedRect.value = {
         left: winStartLeft.value,
         top: winStartTop.value,
@@ -275,6 +281,7 @@ const onMouseUp = () => {
   }
   dragging.value = false;
   resizing.value = false;
+  hasMoved = false;
 };
 
 onMounted(() => {
@@ -326,8 +333,8 @@ onUnmounted(() => {
           <img :src="minimize" alt="minimize" />
         </button>
         <button
-          class="os-window__btn os-window__btn--maximize"
-          @click="toggleMaximize"
+          class="os-window__btn"
+          @click.stop="toggleMaximize"
           :title="isMaximized ? '还原' : '最大化'"
         >
           <img :src="isMaximized ? maximizeDefalut : maximize" alt="close" />
@@ -357,11 +364,11 @@ $text-color: #000;
   position: fixed;
   display: flex;
   flex-direction: column;
-  border: 1px solid $primary;
+  border: 1px solid #a0a4a8;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(30px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 
   &--dragging,
@@ -390,9 +397,8 @@ $text-color: #000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
+  padding-left: 10px;
   height: $titlebar-h;
-  background: $primary;
   color: $text-color;
   user-select: none;
   flex-shrink: 0;
@@ -421,25 +427,25 @@ $text-color: #000;
 
 .os-window__controls {
   display: flex;
-  gap: 8px;
-  margin-left: 12px;
+  height: 100%;
+  align-items: flex-start;
 }
 
 .os-window__btn {
-  width: 24px;
-  height: 24px;
+  width: 42px;
+  height: 36px;
   border: none;
-  border-radius: 4px;
   background: transparent;
   color: $text-color;
-  font-size: 14px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   transition: background 0.15s;
-
+  img {
+    width: 14px;
+    height: 14px;
+  }
   &:hover {
     background: rgba(255, 255, 255, 0.55);
   }
@@ -452,9 +458,8 @@ $text-color: #000;
 // ---- body ----
 .os-window__body {
   flex: 1;
-  padding: 8px 20px;
+  // padding: 10px 2px 10px 10px;
   overflow: hidden;
-  padding-right: 2px;
 }
 
 // ---- resize handles ----

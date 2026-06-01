@@ -1,10 +1,34 @@
 <template>
   <div class="app-main">
     <HeaderBar />
+    <div style="display: flex; width: 100%; height: calc(100% - 80px)">
+      <div ref="railRef">
+        <PcAppRail />
+      </div>
+      <div class="app-layout">
+        <div class="app-router">
+          <!-- <RouterView /> -->
+           <Home></Home>
+        </div>
+        <div class="song-status" ref="routerViewRef">
+          <SongStatus />
+        </div>
+      </div>
+    </div>
+    <div ref="playMainWindowRef" class="play-main-window-box">
+      <!-- <PlayWindow /> -->
+    </div>
+    <!-- <PlayDetail /> -->
+    hahah
   </div>
 </template>
 <script setup lang="ts">
+// import PlayWindow from "./common/PlayWindow.vue";
+// import PlayDetail from "./common/PlayDetail.vue";
+import Home from "./Home/IndexView.vue";
 import HeaderBar from "./common/HeaderBar.vue";
+import PcAppRail from "./common/PcAppRail.vue";
+import SongStatus from "./common/SongStatus.vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const playMainWindowRef = ref<HTMLElement | null>(null);
@@ -61,7 +85,48 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100%;
-  overflow: auto;
+  height: 100vh;
+}
+
+.app-layout {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  flex: 1;
+  display: flex;
+  gap: 20px;
+  padding-right: 38px;
+  z-index: 1;
+  .song-status {
+    width: 380px;
+    background: linear-gradient(to bottom, rgba(35, 35, 35, 0.5) 0%, rgba(0, 0, 0, 1) 100%);
+    border-radius: 40px 40px 0 0;
+  }
+}
+
+.app-router {
+  flex: 1;
+}
+
+.play-main-window-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(2px);
+  & > * {
+    pointer-events: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  .play-main-window-box {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    position: fixed;
+    z-index: 2;
+  }
 }
 </style>
