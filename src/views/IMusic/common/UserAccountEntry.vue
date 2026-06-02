@@ -1,13 +1,15 @@
 <template>
   <div ref="rootRef" class="user-account-entry" :data-variant="variant">
-    <button type="button" class="user-account-trigger" @click.stop="toggleMenu">
+    <button type="button" class="user-account-trigger">
       <span class="avatar-wrap">
         <img v-if="userInfoStore.data.token" src="@/assets/iMusic/icons/avatar.svg" alt="" />
-        <img v-else src="@/assets/iMusic/icons/defaultAvatar.svg" alt="" />
+        <img v-else src="@/assets/iMusic/icons/defaultAvatar.svg" @click="requestLogin" />
       </span>
       <span class="user-label">
         <template v-if="userInfoStore.data.token">{{ userInfoStore.data.user.username }}</template>
-        <template v-else>去登录</template>
+        <template v-else>
+          <span @click="requestLogin">去登录</span>
+        </template>
       </span>
     </button>
 
@@ -56,16 +58,13 @@ const userInfoStore = useUserInfoStore();
 const menuOpen = ref(false);
 const rootRef = ref<HTMLElement | null>(null);
 
-const closeMenu = () => {
-  menuOpen.value = false;
+// 只发事件，overlay 由 HeaderBar 统一管理
+const requestLogin = () => {
+  emit("needLogin");
 };
 
-const toggleMenu = () => {
-  if (!userInfoStore.data.token) {
-    emit("needLogin");
-    return;
-  }
-  menuOpen.value = !menuOpen.value;
+const closeMenu = () => {
+  menuOpen.value = false;
 };
 
 const onSwitchAccount = () => {

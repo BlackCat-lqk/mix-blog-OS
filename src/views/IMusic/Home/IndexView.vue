@@ -3,29 +3,7 @@
     <div class="home-content">
       <header class="home-page-header">
         <h1 class="home-title">发现音乐</h1>
-        <p class="home-subtitle">搜索曲目或在下方浏览推荐播放列表</p>
       </header>
-
-      <div class="search-box">
-        <img src="@/assets/iMusic/icons/Search.svg" alt="" class="search-icon" />
-        <input
-          type="text"
-          class="search-input"
-          placeholder="搜索歌曲、歌手…"
-          v-model="keyword"
-          @input="searchSongs"
-        />
-        <button
-          v-show="keyword.length > 0"
-          type="button"
-          class="search-clear"
-          aria-label="清除搜索"
-          @click="clearSearch"
-        >
-          <span aria-hidden="true">×</span>
-        </button>
-      </div>
-
       <div v-show="searchMusicData.length > 0" class="search-result">
         <div class="title-header">搜索结果</div>
         <div class="list-box">
@@ -58,72 +36,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { searchMusicApi } from '@/server/iMusic/musicHttp'
-import { _debounce } from '@/utils/publickFun'
-import PlayList from './common/PlayList.vue'
-import { useEventStore } from '@/stores/iMusic/eventStore'
-import LoadingView from '../common/LoadingView.vue'
+import { ref } from "vue";
+import PlayList from "./common/PlayList.vue";
+import { useEventStore } from "@/stores/iMusic/eventStore";
+import LoadingView from "../common/LoadingView.vue";
 
-const eventStore = useEventStore()
-const keyword = ref('')
-const searchTip = ref(false)
-const loading = ref(false)
-const searchMusicData = ref([] as MusicItem[])
+const eventStore = useEventStore();
+const searchTip = ref(false);
+const loading = ref(false);
+const searchMusicData = ref([] as MusicItem[]);
 
 interface MusicItem {
-  id?: number
-  title: string
-  artist?: string
-  audioUrl?: string
-  duration?: number
-  coverUrl?: string
-  lyricsUrl?: string
-}
-
-const searchSongs = _debounce(async () => {
-  if (keyword.value.length < 1) {
-    searchMusicData.value = []
-    searchTip.value = false
-    return
-  }
-  loading.value = true
-  const response = await searchMusicApi({ keyword: keyword.value })
-  const res = response.data
-  if (res.length > 0) {
-    searchTip.value = false
-    searchMusicData.value = res
-  } else {
-    searchTip.value = true
-    searchMusicData.value = []
-  }
-  loading.value = false
-}, 600)
-
-const clearSearch = () => {
-  keyword.value = ''
-  searchMusicData.value = []
-  searchTip.value = false
-  loading.value = false
+  id?: number;
+  title: string;
+  artist?: string;
+  audioUrl?: string;
+  duration?: number;
+  coverUrl?: string;
+  lyricsUrl?: string;
 }
 
 const hanleSongDetail = (idx: number) => {
-  eventStore.setShow(true)
-  eventStore.setCurrentIndex(idx)
-  eventStore.setData(searchMusicData.value)
-  eventStore.controlPlay(true)
-  eventStore.outControlPlay(true)
-}
+  eventStore.setShow(true);
+  eventStore.setCurrentIndex(idx);
+  eventStore.setData(searchMusicData.value);
+  eventStore.controlPlay(true);
+  eventStore.outControlPlay(true);
+};
 </script>
 
 <style scoped lang="scss">
+$text-color: #000;
 .home-box {
   width: 100%;
-  height: calc(100vh - 80px);
+  height: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: hidden;
 }
 
 .home-page-header {
@@ -145,12 +96,36 @@ const hanleSongDetail = (idx: number) => {
     aspect-ratio: 1 / 0.44;
     border-radius: 40px;
     -webkit-mask-image:
-      linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 8%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 100%),
-      linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 8%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 100%);
+      linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 1) 8%,
+        rgba(0, 0, 0, 1) 92%,
+        rgba(0, 0, 0, 0) 100%
+      ),
+      linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 1) 8%,
+        rgba(0, 0, 0, 1) 92%,
+        rgba(0, 0, 0, 0) 100%
+      );
     -webkit-mask-composite: source-in;
     mask-image:
-      linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 8%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 100%),
-      linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 8%, rgba(0, 0, 0, 1) 92%, rgba(0, 0, 0, 0) 100%);
+      linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 1) 8%,
+        rgba(0, 0, 0, 1) 92%,
+        rgba(0, 0, 0, 0) 100%
+      ),
+      linear-gradient(
+        to right,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 1) 8%,
+        rgba(0, 0, 0, 1) 92%,
+        rgba(0, 0, 0, 0) 100%
+      );
     mask-composite: intersect;
     img {
       width: 100%;
@@ -185,7 +160,7 @@ const hanleSongDetail = (idx: number) => {
     height: 36px;
     background-color: transparent;
     border: none;
-    color: #fff;
+    color: $text-color;
     font-size: 14px;
   }
 
@@ -224,7 +199,7 @@ const hanleSongDetail = (idx: number) => {
 
     &:hover {
       background: rgba(255, 255, 255, 0.2);
-      color: #fff;
+      color: $text-color;
     }
 
     &:focus-visible {
@@ -245,7 +220,7 @@ const hanleSongDetail = (idx: number) => {
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 10px;
-    color: #fff;
+    color: $text-color;
     letter-spacing: 2px;
   }
 
@@ -297,7 +272,7 @@ const hanleSongDetail = (idx: number) => {
 
         .title {
           font-size: 14px;
-          color: #fff;
+          color: $text-color;
         }
 
         .artist {
@@ -335,7 +310,7 @@ const hanleSongDetail = (idx: number) => {
     margin: 0 0 8px;
     font-size: 22px;
     font-weight: 650;
-    color: #f5f5f5;
+    color: $text-color;
     letter-spacing: 0.03em;
   }
 

@@ -1,10 +1,16 @@
 <template>
   <div class="app-main">
     <HeaderBar />
+    <div class="app-main--home">
+      <PcAppRail></PcAppRail>
+      <HomeIndex></HomeIndex>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
 import HeaderBar from "./common/HeaderBar.vue";
+import PcAppRail from "./common/PcAppRail.vue";
+import HomeIndex from "./Home/IndexView.vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const playMainWindowRef = ref<HTMLElement | null>(null);
@@ -62,6 +68,11 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   height: 100%;
-  overflow: auto;
+  &--home {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    background-color: #fff;
+  }
 }
 </style>

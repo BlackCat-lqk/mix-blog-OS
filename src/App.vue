@@ -105,7 +105,7 @@ watch(
       :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
       v-show="!minimizeWindow.includes(app.enName)"
     >
-      <Setting v-if="app.enName === 'Setting'" />
+      <Setting v-if="app.enName === 'Setting'" id="grand-parent" />
       <IMusic v-else-if="app.enName === 'iMusic'" />
     </OsWindow>
 

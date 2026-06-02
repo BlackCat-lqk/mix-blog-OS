@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="right-bar">
-      <img src="@/assets/iMusic/icons/inform.svg" @click="visibleMessage = !visibleMessage" />
+      <img src="@/assets/iMusic/icons/inform.svg" @click="toggleMessageOverlay" />
       <div class="avatar-info">
         <UserAccountEntry variant="rail" @need-login="visibleLogin = true" />
       </div>
@@ -40,25 +40,14 @@
       </Transition>
     </div>
   </div>
-  <MessageNotification v-model:visible="visibleMessage" title="通知">
-    <template #content>
-      <div class="message-box">
-        <div>
-          <img src="@/assets/iMusic/icons/qz.svg" />
-        </div>
-        <span>iMusic</span>
-        <span class="version">version：0.0.2</span>
-      </div>
-    </template>
-  </MessageNotification>
-  <UserLogin v-model:visible="visibleLogin" title="Login" />
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, inject, markRaw } from "vue";
+import type { Component, VNode } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import UserAccountEntry from "./UserAccountEntry.vue";
-import MessageNotification from "@/components/DialogNotification.vue";
+import NotificationContent from "./NotificationContent.vue";
 import UserLogin from "./UserLogin.vue";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
 import { useEventStore } from "@/stores/iMusic/eventStore";
@@ -66,8 +55,53 @@ import { useEventStore } from "@/stores/iMusic/eventStore";
 
 const eventStore = useEventStore();
 const userInfoStore = useUserInfoStore();
-const visibleMessage = ref(false);
+
+// 使用 OsWindow 的 overlay 系统（OsWindow 不存在时 fallback 不显示）
+const osOverlay = inject("osOverlay") as
+  | {
+      visible: boolean;
+      title: string;
+      content: (() => VNode) | Component | null;
+      closeOnMask: boolean;
+    }
+  | undefined;
+
+const toggleMessageOverlay = () => {
+  if (!osOverlay) return;
+  if (osOverlay.visible) {
+    osOverlay.visible = false;
+  } else {
+    osOverlay.title = "通知";
+    osOverlay.content = markRaw(NotificationContent);
+    osOverlay.visible = true;
+  }
+};
+
 const visibleLogin = ref(false);
+
+// visibleLogin 变化 → 显示/隐藏登录 overlay
+watch(visibleLogin, (v) => {
+  if (!osOverlay) return;
+  if (v) {
+    osOverlay.title = "Login";
+    osOverlay.content = markRaw(UserLogin);
+    osOverlay.closeOnMask = false;
+    osOverlay.visible = true;
+  } else {
+    osOverlay.visible = false;
+  }
+});
+
+// overlay 被关闭（点 X 或 UserLogin 内部关闭）→ 同步回 visibleLogin
+watch(
+  () => osOverlay?.visible,
+  (v) => {
+    if (v === false && visibleLogin.value) {
+      visibleLogin.value = false;
+    }
+  },
+);
+
 const visibleSetting = ref(false);
 const menuOpen = ref(false);
 const pendingUploadAfterLogin = ref(false);
@@ -202,6 +236,7 @@ $bg-color: #fff;
     }
   }
   .right-bar {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -218,42 +253,18 @@ $bg-color: #fff;
     }
   }
 }
-.message-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 100%;
-  padding: 30px 0;
-  img {
-    width: 30px;
-    height: 30px;
-  }
-  span {
-    color: #fff;
-  }
-  .version {
-    font-size: 12px;
-    color: $text-color;
-  }
-}
 .box-header-menu {
   position: absolute;
   top: 100%;
-  right: 8px;
-  padding: 10px;
-  border-radius: 15px;
-  background: $bg-color;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  right: -10px;
+  background: rgba(0, 0, 0, 0.01);
+  backdrop-filter: blur(5px);
   .menu-item {
     display: flex;
     gap: 5px;
     width: 100%;
     padding: 11px 14px;
-    margin: 2px 0;
     border: none;
-    border-radius: 8px;
     background: transparent;
     color: $text-color;
     font-size: 14px;
@@ -262,7 +273,7 @@ $bg-color: #fff;
     font-family: inherit;
     transition: background 0.12s ease;
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background-color: rgba(255, 255, 255, 1);
     }
     .pc-rail-icon {
       width: 20px;

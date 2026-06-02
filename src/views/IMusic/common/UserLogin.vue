@@ -1,76 +1,48 @@
 <template>
-  <div v-if="props.visible" class="login-container">
-    <DialogNotification :visible="props.visible" :title="props.title" @closeDialog="handleClose">
-      <template #content>
-        <form @submit.prevent="handleSubmit" class="form-container">
-          <!-- 账号-->
-          <div class="form-group">
-            <label for="account" class="form-label">ACCOUNT</label>
-            <input
-              type="text"
-              id="account"
-              v-model="formData.account"
-              placeholder="account"
-              class="form-input"
-              required
-            />
-          </div>
-          <!-- 密码 -->
-          <div class="form-group">
-            <label for="password" class="form-label">PASSWORD</label>
-            <input
-              type="text"
-              id="password"
-              v-model="formData.password"
-              placeholder="Artist"
-              class="form-input"
-              required
-            />
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-cancel" @click="handleClose">Cancle</button>
-            <button type="submit" class="btn btn-submit" :disabled="submitting">
-              {{ submitting ? "Submiting..." : "Submit" }}
-            </button>
-          </div>
-        </form>
-      </template>
-    </DialogNotification>
-  </div>
-  <DialogNotification
-    v-if="notificationVisible"
-    :visible="notificationVisible"
-    title="Info"
-    @closeDialog="handleCloseTip"
-  >
-    <template #content>
-      <div style="display: flex; justify-content: center; align-items: center; padding: 20px">
-        <span v-if="!uploadLoading" style="color: #fff">{{ inforMsg }}</span>
-        <span v-else style="color: #fff">UPLOADING...</span>
+  <div class="login-container">
+    <form @submit.prevent="handleSubmit" class="form-container">
+      <!-- 账号-->
+      <div class="form-group">
+        <label for="account" class="form-label">ACCOUNT</label>
+        <input
+          type="text"
+          id="account"
+          v-model="formData.account"
+          placeholder="account"
+          class="form-input"
+          required
+        />
       </div>
-    </template>
-  </DialogNotification>
+      <!-- 密码 -->
+      <div class="form-group">
+        <label for="password" class="form-label">PASSWORD</label>
+        <input
+          type="text"
+          id="password"
+          v-model="formData.password"
+          placeholder="Artist"
+          class="form-input"
+          required
+        />
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-cancel" @click="handleClose">Cancle</button>
+        <button type="submit" class="btn btn-submit" :disabled="submitting">
+          {{ submitting ? "Submiting..." : "Submit" }}
+        </button>
+      </div>
+    </form>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
-import DialogNotification from "@/components/DialogNotification.vue";
+import { reactive, ref, inject } from "vue";
 import { loginUserApi } from "@/server/iMusic/userHttp";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
 const notificationVisible = ref(false);
 const userInfoStore = useUserInfoStore();
 const uploadLoading = ref(false);
 const inforMsg = ref("");
-const props = defineProps({
-  visible: {
-    type: Boolean,
-    default: false,
-  },
-  title: {
-    type: String,
-    default: "",
-  },
-});
 // 提交状态
 const submitting = ref(false);
 const formData = reactive({
@@ -83,9 +55,9 @@ interface User {
   id: string;
   account: string;
 }
-const handleCloseTip = () => {
-  notificationVisible.value = false;
-};
+// const handleCloseTip = () => {
+//   notificationVisible.value = false;
+// };
 // 定义整个 data 的结构
 export interface UserData {
   token: string;
@@ -135,18 +107,24 @@ const handleSubmit = async () => {
     uploadLoading.value = false;
   }
 };
-const emit = defineEmits(["update:visible"]);
-// 关闭弹窗
+// 关闭弹窗 → 直接关闭 OsWindow overlay
+const osOverlay = inject("osOverlay") as { visible: boolean } | undefined;
+
 const handleClose = () => {
-  emit("update:visible", false);
+  if (osOverlay) {
+    osOverlay.visible = false;
+  }
 };
 </script>
 
 <style lang="scss" scoped>
+$text-color: #000;
+$text-color1: #fff;
 .form-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 350px;
 }
 
 .form-group {
@@ -154,20 +132,20 @@ const handleClose = () => {
   flex-direction: column;
   gap: 8px;
   .file-info {
-    color: #fff;
+    color: $text-color;
   }
   .remove-file {
     margin-left: 5px;
     cursor: pointer;
     background-color: #0f3f22;
-    color: #fff;
+    color: $text-color;
   }
 }
 
 .form-label {
   font-size: 14px;
   font-weight: 500;
-  color: #ffffff;
+  color: $text-color;
 
   &::after {
     content: " *";
@@ -221,13 +199,12 @@ textarea.form-input {
   gap: 12px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #181818;
 
   .btn {
     flex: 1;
     padding: 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -236,7 +213,7 @@ textarea.form-input {
 
     &-cancel {
       background-color: #f5f5f5;
-      color: #000;
+      color: $text-color;
 
       &:hover {
         background-color: #e8e8e8;
@@ -245,10 +222,10 @@ textarea.form-input {
 
     &-submit {
       background-color: #2f784c;
-      color: #fff;
+      color: $text-color1;
 
       &:hover:not(:disabled) {
-        background-color: #48ee8a;
+        background-color: #39bb6d;
       }
 
       &:disabled {

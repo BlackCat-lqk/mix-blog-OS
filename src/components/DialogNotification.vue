@@ -1,19 +1,22 @@
 <template>
-  <Teleport to=".app-main">
-    <div v-if="props.visible" class="message-dialog-overlay">
-      <div class="message-dialog">
-        <div class="dialog-header">
-          <h3>{{ props.title }}</h3>
-          <button class="close-btn" @click="handleClose">
-            <img src="@/assets/icons/close.svg" />
-          </button>
-        </div>
-        <div class="dialog-body">
-          <slot name="content"></slot>
-        </div>
+  <div
+    style="z-index: 999"
+    v-if="props.visible"
+    class="message-dialog-overlay"
+    :class="{ 'message-dialog-overlay--inline': props.inline }"
+  >
+    <div class="message-dialog">
+      <div class="dialog-header">
+        <h3>{{ props.title }}</h3>
+        <button class="close-btn" @click="handleClose">
+          <img src="@/assets/icons/close.svg" />
+        </button>
+      </div>
+      <div class="dialog-body">
+        <slot name="content"></slot>
       </div>
     </div>
-  </Teleport>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -26,6 +29,11 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  /** 内嵌模式：不做 fixed 定位，由父容器控制 */
+  inline: {
+    type: Boolean,
+    default: false,
+  },
 });
 const emit = defineEmits(["update:visible", "closeDialog"]);
 // 关闭弹窗
@@ -36,30 +44,26 @@ const handleClose = () => {
 </script>
 
 <style lang="scss" scoped>
+$close-hover: #fa5959;
 .message-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-modal);
-  padding: 20px;
-  height: 100vh;
-  max-height: 100vh;
   animation: fadeIn 0.3s ease;
+  &--inline {
+    position: static;
+    background-color: transparent;
+    backdrop-filter: none;
+  }
 
   .message-dialog {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
-    border-radius: 15px;
+    border-radius: 10px;
     width: 100%;
-    max-width: 500px;
-    max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -71,14 +75,12 @@ const handleClose = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #242424;
-
+  padding-left: 12px;
+  border-bottom: 1px solid #e7e7e7;
   h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
   }
 
   .close-btn {
@@ -93,12 +95,9 @@ const handleClose = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-
+    transition: all 0.3s;
     &:hover {
-      background-color: #ffffff;
-      color: #666;
+      background-color: $close-hover;
     }
   }
 }

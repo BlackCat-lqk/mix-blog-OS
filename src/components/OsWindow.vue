@@ -1,6 +1,8 @@
 /* * os-window * @description: 窗口组件 */
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, provide, reactive } from "vue";
+import type { VNode, Component } from "vue";
+import DialogNotification from "@/components/DialogNotification.vue";
 import minimize from "@/assets/icons/minimize.svg";
 import close from "@/assets/icons/close.svg";
 import maximize from "@/assets/icons/maximize.svg";
@@ -11,6 +13,28 @@ defineProps<{ title?: string; icon?: string }>();
 const emit = defineEmits<{ close: []; minimize: [] }>();
 
 const isMinimized = defineModel<boolean>("minimized", { default: false });
+
+// ---- overlay 弹窗系统 ----
+// 子组件通过 inject 获取此对象，设置 visible/title/content 来在窗口内显示弹窗
+const osOverlay = reactive<{
+  visible: boolean;
+  title: string;
+  content: (() => VNode) | Component | null;
+  /** 点击遮罩层是否关闭弹窗，默认 true */
+  closeOnMask: boolean;
+}>({
+  visible: false,
+  title: "",
+  content: null,
+  closeOnMask: true,
+});
+
+const onOverlayMaskClick = () => {
+  if (osOverlay.closeOnMask) {
+    osOverlay.visible = false;
+  }
+};
+provide("osOverlay", osOverlay);
 
 const MIN_WIDTH = 350;
 const MIN_HEIGHT = 320;
@@ -350,6 +374,15 @@ onUnmounted(() => {
     <div class="os-window__body">
       <slot />
     </div>
+
+    <!-- overlay 弹窗：OsWindow 自己渲染，不用 Teleport，遮罩不盖 titlebar -->
+    <div v-if="osOverlay.visible" class="os-window__overlay" @click.self="onOverlayMaskClick">
+      <DialogNotification :visible="true" :title="osOverlay.title" inline @update:visible="osOverlay.visible = false">
+        <template #content>
+          <component :is="osOverlay.content" v-if="osOverlay.content" />
+        </template>
+      </DialogNotification>
+    </div>
   </div>
 </template>
 
@@ -462,10 +495,25 @@ $text-color: #000;
   overflow: hidden;
 }
 
+// ---- overlay（弹窗区域，从 titlebar 下方开始，不盖标题栏）----
+.os-window__overlay {
+  position: absolute;
+  top: $titlebar-h;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 // ---- resize handles ----
 .os-resize {
   position: absolute;
-  z-index: 10;
+  z-index: 110;
 
   &--n {
     top: -3px;

@@ -30,54 +30,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useEventStore } from '@/stores/iMusic/eventStore'
-const eventStore = useEventStore()
-import { getMusicApi } from '@/server/iMusic/musicHttp'
-import { formatSeconds } from '@/utils/publickFun'
+import { ref, onMounted } from "vue";
+import { useEventStore } from "@/stores/iMusic/eventStore";
+const eventStore = useEventStore();
+import { getMusicApi } from "@/server/iMusic/musicHttp";
+import { formatSeconds } from "@/utils/publickFun";
 
 interface MusicItem {
-  id?: number
-  title: string
-  artist?: string
-  audioUrl?: string
-  duration?: number
-  coverUrl?: string
-  lyricsUrl?: string
+  id?: number;
+  title: string;
+  artist?: string;
+  audioUrl?: string;
+  duration?: number;
+  coverUrl?: string;
+  lyricsUrl?: string;
 }
 
 interface listData {
-  data: Array<MusicItem>
-  total: number
-  currentPage: number
-  pageSize: number
-  totalPages: number
+  data: Array<MusicItem>;
+  total: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
 }
 
-const musicList = ref<Array<MusicItem>>([])
+const musicList = ref<Array<MusicItem>>([]);
 
 // 歌曲详情
 const hanleSongDetail = (idx: number) => {
-  eventStore.setShow(true)
-  eventStore.setCurrentIndex(idx)
-  eventStore.setData(musicList.value)
+  eventStore.setShow(true);
+  eventStore.setCurrentIndex(idx);
+  eventStore.setData(musicList.value);
   // eventStore.controlPlay(true)
   // eventStore.outControlPlay(true)
-}
+};
 
 // 获取音乐列表
 const getMusicList = async () => {
   const params = {
     page: 1,
     limit: 100,
-  }
-  const res: { data: listData } = await getMusicApi(params)
-  musicList.value = res.data.data
+  };
+  const res: { data: listData } = await getMusicApi(params);
+  musicList.value = res.data.data;
   // eventStore.setData(musicList.value)
-}
+};
 onMounted(() => {
-  getMusicList()
-})
+  getMusicList();
+});
 </script>
 
 <style scoped lang="scss">
