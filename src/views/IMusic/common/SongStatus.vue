@@ -1,5 +1,5 @@
 <template>
-  <aside class="song-status">
+  <div class="song-status">
     <div class="status-head">
       <img src="@/assets/iMusic/icons/playing.svg" />
       <span>Now Playing</span>
@@ -10,97 +10,112 @@
         <img :src="currentSong?.coverUrl || defaultCover" alt="当前播放歌曲封面" />
       </div>
       <div class="song-meta">
-        <div class="song-name">{{ currentSong?.title || '暂无播放' }}</div>
-        <div class="song-artist">{{ currentSong?.artist || ' ' }}</div>
+        <div class="song-name">{{ currentSong?.title || "暂无播放" }}</div>
+        <div class="song-artist">{{ currentSong?.artist || " " }}</div>
         <button type="button" class="queue-btn" aria-label="打开播放详情" @click="handleOpenDetail">
           <img src="@/assets/iMusic/icons/meun.svg" alt="" />
         </button>
       </div>
     </div>
-
-    <div class="queue-list">
-      <button
-        v-for="(item, idx) in queueSongs"
-        :key="item.song.id ?? `${item.song.title}-${idx}`"
-        type="button"
-        class="queue-item"
-        @click="handlePickSong(idx)"
-      >
-        <div class="queue-cover">
-          <img :src="item.song.coverUrl || defaultCover" alt="" />
-        </div>
-        <div class="queue-meta">
-          <div class="queue-title">{{ item.song.title || '未知歌曲' }}</div>
-          <div class="queue-artist">{{ item.song.artist || '未知歌手' }}</div>
-        </div>
-        <div class="queue-time">{{ formatDuration(item.song.duration) }}</div>
-      </button>
-    </div>
-  </aside>
+    <OverlayScrollbarsComponent
+      defer
+      :options="{
+        scrollbars: {
+          autoHide: 'move',
+          autoHideDelay: 100,
+        },
+      }"
+    >
+      <div class="queue-list">
+        <button
+          v-for="(item, idx) in queueSongs"
+          :key="item.song.id ?? `${item.song.title}-${idx}`"
+          type="button"
+          class="queue-item"
+          @click="handlePickSong(idx)"
+        >
+          <div class="queue-cover">
+            <img :src="item.song.coverUrl || defaultCover" alt="" />
+          </div>
+          <div class="queue-meta">
+            <div class="queue-title">{{ item.song.title || "未知歌曲" }}</div>
+            <div class="queue-artist">{{ item.song.artist || "未知歌手" }}</div>
+          </div>
+          <div class="queue-time">{{ formatDuration(item.song.duration) }}</div>
+        </button>
+      </div>
+    </OverlayScrollbarsComponent>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useEventStore } from '@/stores/iMusic/eventStore'
-import defaultCover from '@/assets/iMusic/images/cover.jpg'
-import { formatTime } from '@/utils/formatTime'
+import { computed } from "vue";
+import { useEventStore } from "@/stores/iMusic/eventStore";
+import defaultCover from "@/assets/iMusic/images/cover.jpg";
+import { formatTime } from "@/utils/formatTime";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 interface MusicItem {
-  id?: number | string
-  title: string
-  artist?: string
-  duration?: number
-  coverUrl?: string
+  id?: number | string;
+  title: string;
+  artist?: string;
+  duration?: number;
+  coverUrl?: string;
 }
 
-const eventStore = useEventStore()
+const eventStore = useEventStore();
 
 const playList = computed<MusicItem[]>(() => {
-  return eventStore.setPlayDetail.data?.length ? eventStore.setPlayDetail.data : []
-})
+  return eventStore.setPlayDetail.data?.length ? eventStore.setPlayDetail.data : [];
+});
 
 const currentSongIdx = computed(() => {
-  const idx = eventStore.setPlayDetail.currentIndex
-  if (idx < 0 || idx >= playList.value.length) return 0
-  return idx
-})
+  const idx = eventStore.setPlayDetail.currentIndex;
+  if (idx < 0 || idx >= playList.value.length) return 0;
+  return idx;
+});
 
-const currentSong = computed(() => playList.value[currentSongIdx.value])
+const currentSong = computed(() => playList.value[currentSongIdx.value]);
 
 const queueSongs = computed(() => {
-  if (!playList.value.length) return []
+  if (!playList.value.length) return [];
   return playList.value
     .map((song, idx) => ({ song, idx }))
-    .filter((item) => item.idx !== currentSongIdx.value)
-})
+    .filter((item) => item.idx !== currentSongIdx.value);
+});
 
 const formatDuration = (duration?: number) => {
-  if (!duration || duration <= 0) return '--:--'
-  return formatTime(duration)
-}
+  if (!duration || duration <= 0) return "--:--";
+  return formatTime(duration);
+};
 
 const handlePickSong = (displayIndex: number) => {
-  const target = queueSongs.value[displayIndex]
-  if (!target) return
-  eventStore.setCurrentIndex(target.idx)
-  eventStore.controlPlay(true)
-}
+  const target = queueSongs.value[displayIndex];
+  if (!target) return;
+  eventStore.setCurrentIndex(target.idx);
+  eventStore.controlPlay(true);
+};
 
 const handleOpenDetail = () => {
-  eventStore.setShow(true)
-}
+  eventStore.setShow(true);
+};
 </script>
 
 <style scoped lang="scss">
+$text-color: #000;
 .song-status {
   display: flex;
   flex-direction: column;
+  width: 260px;
+  height: calc(100% - 80px);
   gap: 18px;
-  height: 100%;
+  min-height: 600px;
   padding: 20px;
   box-sizing: border-box;
-  color: #f5f5f5;
-  background: #0f0f10;
+  color: $text-color;
+  background: rgba(255, 255, 255, 0.8);
+  margin-right: 10px;
+  border-radius: 15px;
 }
 
 .status-head {
@@ -114,19 +129,18 @@ const handleOpenDetail = () => {
   img {
     width: 20px;
     height: 20px;
-    opacity: 0.9;
-    filter: brightness(0) invert(1);
   }
 }
 
 .current-song {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 12px;
 }
 
 .cover-wrap {
-  width: 100%;
+  width: 200px;
   aspect-ratio: 1 / 1;
   border-radius: 40px;
   overflow: hidden;
@@ -142,11 +156,12 @@ const handleOpenDetail = () => {
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-areas:
-    'name menu'
-    'artist menu';
+    "name menu"
+    "artist menu";
   row-gap: 6px;
   align-items: center;
   padding-left: 10px;
+  width: 100%;
 }
 
 .song-name {
@@ -161,7 +176,8 @@ const handleOpenDetail = () => {
 
 .song-artist {
   grid-area: artist;
-  color: rgba(255, 255, 255, 0.65);
+  color: $text-color;
+  opacity: 0.8;
   font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
@@ -178,13 +194,9 @@ const handleOpenDetail = () => {
   padding: 0;
   cursor: pointer;
   border-radius: 20px;
-
   img {
     width: 20px;
     height: 20px;
-    display: block;
-    opacity: 0.85;
-    filter: brightness(0) invert(1);
   }
 }
 
@@ -248,18 +260,20 @@ const handleOpenDetail = () => {
 }
 
 .queue-artist {
-  color: rgba(255, 255, 255, 0.55);
+  color: $text-color;
   font-size: 14px;
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 0.8;
 }
 
 .queue-time {
-  color: rgba(255, 255, 255, 0.45);
+  color: $text-color;
   font-size: 12px;
   min-width: 48px;
   text-align: right;
+  opacity: 0.8;
 }
 </style>

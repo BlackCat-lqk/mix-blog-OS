@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 $text-color: #000;
 $text-active-color: #0044ff;
-$bg-color: #fff;
+$bg-color: rgba(255, 255, 255, 0.9);
 .header-bar-box {
   display: flex;
   justify-content: space-between;
@@ -228,9 +228,10 @@ $bg-color: #fff;
       span {
         font-size: 16px;
         font-weight: 500;
+        opacity: 0.7;
         &:hover {
           cursor: pointer;
-          color: $text-active-color;
+          opacity: 1;
         }
       }
     }
@@ -259,6 +260,8 @@ $bg-color: #fff;
   right: -10px;
   background: rgba(0, 0, 0, 0.01);
   backdrop-filter: blur(5px);
+  border-radius: 0 0 0 8px;
+  z-index: 1;
   .menu-item {
     display: flex;
     gap: 5px;

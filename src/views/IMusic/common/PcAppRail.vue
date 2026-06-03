@@ -108,7 +108,6 @@ $text-clolor: #000;
   flex-direction: column;
   width: 200px;
   flex-shrink: 0;
-  background: #fff;
 }
 
 .pc-rail-nav {

@@ -1,16 +1,16 @@
 <template>
   <div class="message-info">
-    <img v-show="props.type === 'error'" src="@/assets/icon/error.svg" alt="error" />
-    <img v-show="props.type === 'success'" src="@/assets/icon/success.svg" alt="success" />
+    <img v-show="props.type === 'error'" src="@/assets/iMusic/icons/error.svg" alt="error" />
+    <img v-show="props.type === 'success'" src="@/assets/iMusic/icons/success.svg" alt="success" />
     <span>{{ props.message }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
-  type: string
-  message: string
-}>()
+  type: string;
+  message: string;
+}>();
 </script>
 
 <style scoped lang="scss">

@@ -5,12 +5,16 @@
       <PcAppRail></PcAppRail>
       <HomeIndex></HomeIndex>
     </div>
+    <PlayWindow></PlayWindow>
+    <PlayDetail></PlayDetail>
   </div>
 </template>
 <script setup lang="ts">
 import HeaderBar from "./common/HeaderBar.vue";
 import PcAppRail from "./common/PcAppRail.vue";
 import HomeIndex from "./Home/IndexView.vue";
+import PlayWindow from "./common/PlayWindow.vue";
+import PlayDetail from "./common/PlayDetail.vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const playMainWindowRef = ref<HTMLElement | null>(null);
@@ -67,12 +71,13 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
   height: 100%;
   &--home {
     width: 100%;
     height: 100%;
     display: flex;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.9);
   }
 }
 </style>

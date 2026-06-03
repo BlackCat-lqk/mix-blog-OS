@@ -2,11 +2,7 @@
   <div class="play-window-box">
     <div class="play-window-inner">
       <div class="play-window-top">
-        <div
-          class="meta-block"
-          role="button"
-          tabindex="0"
-        >
+        <div class="meta-block" role="button" tabindex="0">
           <div class="cover-box">
             <img
               :src="
@@ -17,7 +13,7 @@
           </div>
           <div class="inform-box">
             <span class="music-name">{{ playList[currentSongIdx]?.title }}</span>
-            <span class="author">{{ playList[currentSongIdx]?.artist || ' ' }}</span>
+            <span class="author">{{ playList[currentSongIdx]?.artist || " " }}</span>
           </div>
         </div>
         <div class="control-box">
@@ -29,7 +25,7 @@
               aria-label="随机播放"
               @click.stop="toggleShuffle"
             >
-              <img src="@/assets/icon/shuffle.svg" alt="" />
+              <img src="@/assets/iMusic/icons/shuffle.svg" alt="" />
             </button>
             <button
               type="button"
@@ -38,7 +34,7 @@
               :disabled="!canChangeTrack"
               @click.stop="previousSong"
             >
-              <img src="@/assets/icon/previousSong.svg" alt="" />
+              <img src="@/assets/iMusic/icons/previousSong.svg" alt="" />
             </button>
             <button
               type="button"
@@ -55,7 +51,7 @@
               :disabled="!canChangeTrack"
               @click.stop="nextSong"
             >
-              <img src="@/assets/icon/nextSong.svg" alt="" />
+              <img src="@/assets/iMusic/icons/nextSong.svg" alt="" />
             </button>
             <button
               type="button"
@@ -64,8 +60,8 @@
               aria-label="循环模式"
               @click.stop="loopControl"
             >
-              <img v-if="!isSingleLoop" src="@/assets/icon/repeat.svg" alt="" />
-              <img v-else src="@/assets/icon/repeatOnce.svg" alt="" />
+              <img v-if="!isSingleLoop" src="@/assets/iMusic/icons/repeat.svg" alt="" />
+              <img v-else src="@/assets/iMusic/icons/repeatOnce.svg" alt="" />
             </button>
           </div>
           <div class="mini-progress" aria-hidden="true">
@@ -90,7 +86,7 @@
             @input="changeVolume"
           />
           <button type="button" class="ctrl-icon status-icon" @click="handlePlayDetail">
-            <img src="@/assets/icon/full.svg" alt="" />
+            <img src="@/assets/iMusic/icons/full.svg" alt="" />
           </button>
         </div>
       </div>
@@ -99,217 +95,222 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { useEventStore } from '@/stores/eventStore'
-import autoAvatar from '@/assets/images/cover.jpg'
-import PlayIcon from '@/assets/icon/play.svg'
-import SuspendIcon from '@/assets/icon/suspend.svg'
-import VoiceIcon from '@/assets/icon/voice.svg'
-import VolumeDisableIcon from '@/assets/icon/volumeDisable.svg'
+import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { useEventStore } from "@/stores/iMusic/eventStore";
+import autoAvatar from "@/assets/iMusic/images/cover.jpg";
+import PlayIcon from "@/assets/iMusic/icons/play.svg";
+import SuspendIcon from "@/assets/iMusic/icons/suspend.svg";
+import VoiceIcon from "@/assets/iMusic/icons/voice.svg";
+import VolumeDisableIcon from "@/assets/iMusic/icons/volumeDisable.svg";
 
 interface MusicItem {
-  id?: number | string
-  title: string
-  artist?: string
-  audioUrl?: string
-  duration?: number
-  coverUrl?: string
-  lyricsUrl?: string
+  id?: number | string;
+  title: string;
+  artist?: string;
+  audioUrl?: string;
+  duration?: number;
+  coverUrl?: string;
+  lyricsUrl?: string;
 }
 
-const eventStore = useEventStore()
-const isPlayingFlag = ref(false)
-const currentSongIdx = ref(0)
-const placeholderList: MusicItem[] = [{ title: '暂无播放' }]
-const playList = ref<Array<MusicItem>>([...placeholderList])
-const progressPercent = ref(0)
-const audioElRef = ref<HTMLAudioElement | null>(null)
-const volumeBarValue = ref(70)
-const lastVolumeBeforeMute = ref(70)
+const eventStore = useEventStore();
+const isPlayingFlag = ref(false);
+const currentSongIdx = ref(0);
+const placeholderList: MusicItem[] = [{ title: "暂无播放" }];
+const playList = ref<Array<MusicItem>>([...placeholderList]);
+const progressPercent = ref(0);
+const audioElRef = ref<HTMLAudioElement | null>(null);
+const volumeBarValue = ref(70);
+const lastVolumeBeforeMute = ref(70);
 
-const canChangeTrack = computed(() => playList.value.length > 1)
-const playMode = computed(() => eventStore.playMode)
-const isSingleLoop = computed(() => playMode.value === 'single-loop')
+const canChangeTrack = computed(() => playList.value.length > 1);
+const playMode = computed(() => eventStore.playMode);
+const isSingleLoop = computed(() => playMode.value === "single-loop");
 
 const syncAudioProgress = () => {
-  const audio = audioElRef.value
+  const audio = audioElRef.value;
   if (!audio) {
-    progressPercent.value = 0
-    return
+    progressPercent.value = 0;
+    return;
   }
-  const duration = Number(audio.duration)
-  const current = Number(audio.currentTime)
+  const duration = Number(audio.duration);
+  const current = Number(audio.currentTime);
   if (!Number.isFinite(duration) || duration <= 0) {
-    progressPercent.value = 0
-    return
+    progressPercent.value = 0;
+    return;
   }
-  const percent = Math.min(100, Math.max(0, (current / duration) * 100))
-  progressPercent.value = Math.round(percent * 100) / 100
-}
+  const percent = Math.min(100, Math.max(0, (current / duration) * 100));
+  progressPercent.value = Math.round(percent * 100) / 100;
+};
 
 const detachAudioEvents = () => {
-  const audio = audioElRef.value
-  if (!audio) return
-  audio.removeEventListener('timeupdate', syncAudioProgress)
-  audio.removeEventListener('loadeddata', syncAudioProgress)
-  audio.removeEventListener('durationchange', syncAudioProgress)
-  audio.removeEventListener('seeked', syncAudioProgress)
-  audio.removeEventListener('ended', syncAudioProgress)
-}
+  const audio = audioElRef.value;
+  if (!audio) return;
+  audio.removeEventListener("timeupdate", syncAudioProgress);
+  audio.removeEventListener("loadeddata", syncAudioProgress);
+  audio.removeEventListener("durationchange", syncAudioProgress);
+  audio.removeEventListener("seeked", syncAudioProgress);
+  audio.removeEventListener("ended", syncAudioProgress);
+};
 
 const bindAudioEvents = () => {
-  const el = document.getElementById('imusicAudio') as HTMLAudioElement | null
-  if (!el) return
+  const el = document.getElementById("imusicAudio") as HTMLAudioElement | null;
+  if (!el) return;
   if (audioElRef.value === el) {
-    syncAudioProgress()
-    return
+    syncAudioProgress();
+    return;
   }
 
-  detachAudioEvents()
-  audioElRef.value = el
-  el.volume = volumeBarValue.value / 100
-  el.loop = isSingleLoop.value
-  el.addEventListener('timeupdate', syncAudioProgress)
-  el.addEventListener('loadeddata', syncAudioProgress)
-  el.addEventListener('durationchange', syncAudioProgress)
-  el.addEventListener('seeked', syncAudioProgress)
-  el.addEventListener('ended', syncAudioProgress)
-  syncAudioProgress()
-}
+  detachAudioEvents();
+  audioElRef.value = el;
+  el.volume = volumeBarValue.value / 100;
+  el.loop = isSingleLoop.value;
+  el.addEventListener("timeupdate", syncAudioProgress);
+  el.addEventListener("loadeddata", syncAudioProgress);
+  el.addEventListener("durationchange", syncAudioProgress);
+  el.addEventListener("seeked", syncAudioProgress);
+  el.addEventListener("ended", syncAudioProgress);
+  syncAudioProgress();
+};
 
 const togglePlay = () => {
-  eventStore.setCurrentIndex(currentSongIdx.value)
-  eventStore.controlPlay(!eventStore.control.play)
-}
+  eventStore.setCurrentIndex(currentSongIdx.value);
+  eventStore.controlPlay(!eventStore.control.play);
+};
 
 const previousSong = () => {
-  const len = playList.value.length
-  if (len < 1) return
-  if (playMode.value === 'shuffle') {
-    const randomIdx = getRandomNextIndex(currentSongIdx.value, len)
-    eventStore.setCurrentIndex(randomIdx)
-    return
+  const len = playList.value.length;
+  if (len < 1) return;
+  if (playMode.value === "shuffle") {
+    const randomIdx = getRandomNextIndex(currentSongIdx.value, len);
+    eventStore.setCurrentIndex(randomIdx);
+    return;
   }
-  const next = currentSongIdx.value <= 0 ? len - 1 : currentSongIdx.value - 1
-  eventStore.setCurrentIndex(next)
-}
+  const next = currentSongIdx.value <= 0 ? len - 1 : currentSongIdx.value - 1;
+  eventStore.setCurrentIndex(next);
+};
 
 const nextSong = () => {
-  const len = playList.value.length
-  if (len < 1) return
-  if (playMode.value === 'shuffle') {
-    const randomIdx = getRandomNextIndex(currentSongIdx.value, len)
-    eventStore.setCurrentIndex(randomIdx)
-    return
+  const len = playList.value.length;
+  if (len < 1) return;
+  if (playMode.value === "shuffle") {
+    const randomIdx = getRandomNextIndex(currentSongIdx.value, len);
+    eventStore.setCurrentIndex(randomIdx);
+    return;
   }
-  const next = currentSongIdx.value >= len - 1 ? 0 : currentSongIdx.value + 1
-  eventStore.setCurrentIndex(next)
-}
+  const next = currentSongIdx.value >= len - 1 ? 0 : currentSongIdx.value + 1;
+  eventStore.setCurrentIndex(next);
+};
 
 const getRandomNextIndex = (current: number, len: number) => {
-  if (len <= 1) return current
-  let next = current
+  if (len <= 1) return current;
+  let next = current;
   while (next === current) {
-    next = Math.floor(Math.random() * len)
+    next = Math.floor(Math.random() * len);
   }
-  return next
-}
+  return next;
+};
 
 const loopControl = () => {
-  const nextMode = isSingleLoop.value ? 'list-loop' : 'single-loop'
-  eventStore.setPlayMode(nextMode)
-}
+  const nextMode = isSingleLoop.value ? "list-loop" : "single-loop";
+  eventStore.setPlayMode(nextMode);
+};
 
 const toggleShuffle = () => {
-  const nextMode = playMode.value === 'shuffle' ? 'list-loop' : 'shuffle'
-  eventStore.setPlayMode(nextMode)
-}
+  const nextMode = playMode.value === "shuffle" ? "list-loop" : "shuffle";
+  eventStore.setPlayMode(nextMode);
+};
 
 const changeVolume = (e: Event) => {
-  if (!e.target) return
-  const target = e.target as HTMLInputElement
-  volumeBarValue.value = Number.parseInt(target.value, 10)
+  if (!e.target) return;
+  const target = e.target as HTMLInputElement;
+  volumeBarValue.value = Number.parseInt(target.value, 10);
   if (volumeBarValue.value > 0) {
-    lastVolumeBeforeMute.value = volumeBarValue.value
+    lastVolumeBeforeMute.value = volumeBarValue.value;
   }
-  eventStore.setVolume(volumeBarValue.value)
-  if (audioElRef.value) audioElRef.value.volume = volumeBarValue.value / 100
-}
+  eventStore.setVolume(volumeBarValue.value);
+  if (audioElRef.value) audioElRef.value.volume = volumeBarValue.value / 100;
+};
 
 const toggleMute = () => {
   if (volumeBarValue.value > 0) {
-    lastVolumeBeforeMute.value = volumeBarValue.value
-    volumeBarValue.value = 0
+    lastVolumeBeforeMute.value = volumeBarValue.value;
+    volumeBarValue.value = 0;
   } else {
-    volumeBarValue.value = lastVolumeBeforeMute.value > 0 ? lastVolumeBeforeMute.value : 70
+    volumeBarValue.value = lastVolumeBeforeMute.value > 0 ? lastVolumeBeforeMute.value : 70;
   }
-  eventStore.setVolume(volumeBarValue.value)
-  if (audioElRef.value) audioElRef.value.volume = volumeBarValue.value / 100
-}
+  eventStore.setVolume(volumeBarValue.value);
+  if (audioElRef.value) audioElRef.value.volume = volumeBarValue.value / 100;
+};
 
 const handlePlayDetail = () => {
-  eventStore.setShow(true)
-  eventStore.setCurrentIndex(currentSongIdx.value)
-}
+  eventStore.setShow(true);
+  eventStore.setCurrentIndex(currentSongIdx.value);
+};
 
 watch(
   () => eventStore.control.play,
   (playing) => {
-    isPlayingFlag.value = playing
+    isPlayingFlag.value = playing;
   },
   { immediate: true },
-)
+);
 watch(
   () => eventStore.setPlayDetail.data,
   (newValue) => {
-    playList.value = newValue?.length ? newValue : [...placeholderList]
+    playList.value = newValue?.length ? newValue : [...placeholderList];
   },
   { deep: true, immediate: true },
-)
+);
 watch(
   () => eventStore.setPlayDetail.currentIndex,
   (newValue) => {
-    if (typeof newValue === 'number' && newValue >= 0) {
-      currentSongIdx.value = newValue
+    if (typeof newValue === "number" && newValue >= 0) {
+      currentSongIdx.value = newValue;
     } else {
-      currentSongIdx.value = 0
+      currentSongIdx.value = 0;
     }
   },
   { immediate: true },
-)
+);
 
 watch(
   () => eventStore.setPlayDetail.show,
   () => {
-    void nextTick(bindAudioEvents)
+    void nextTick(bindAudioEvents);
   },
-)
+);
 watch(
   () => eventStore.volume,
   (val) => {
-    volumeBarValue.value = val
+    volumeBarValue.value = val;
     if (val > 0) {
-      lastVolumeBeforeMute.value = val
+      lastVolumeBeforeMute.value = val;
     }
-    if (audioElRef.value) audioElRef.value.volume = val / 100
+    if (audioElRef.value) audioElRef.value.volume = val / 100;
   },
   { immediate: true },
-)
+);
 
 onMounted(() => {
-  void nextTick(bindAudioEvents)
-})
+  void nextTick(bindAudioEvents);
+});
 
 onBeforeUnmount(() => {
-  detachAudioEvents()
-  audioElRef.value = null
-})
+  detachAudioEvents();
+  audioElRef.value = null;
+});
 </script>
 
 <style scoped lang="scss">
+$text-color: #000;
 .play-window-box {
-  width: calc(100% - 20px);
-  box-sizing: border-box;
+  width: 100%;
+  padding: 0 10px;
+  position: absolute;
+  bottom: 0;
+  background-color: #fff;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .play-window-inner {
@@ -331,7 +332,7 @@ onBeforeUnmount(() => {
 .volume-range {
   width: 160px;
   height: 4px;
-  accent-color: #fff;
+  accent-color: $text-color;
 }
 
 .mini-progress {
@@ -353,7 +354,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 1;
   border-radius: 12px;
   width: 330px;
 }
@@ -367,7 +367,6 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 
   img {
     width: 100%;
@@ -385,7 +384,7 @@ onBeforeUnmount(() => {
   flex: 1;
 
   .music-name {
-    color: #fff;
+    color: $text-color;
     font-size: 14px;
     font-weight: 500;
     line-height: 1.25;
@@ -395,7 +394,8 @@ onBeforeUnmount(() => {
   }
 
   .author {
-    color: #a3a3a3;
+    color: $text-color;
+    opacity: 0.8;
     font-size: 12px;
     line-height: 1.2;
     overflow: hidden;
@@ -429,7 +429,7 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: rgba(255, 255, 255, 0.92);
+  color: $text-color;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -456,12 +456,30 @@ onBeforeUnmount(() => {
   }
 }
 
-.ctrl-icon--play {
-  width: 36px;
-  height: 36px;
+.ctrl-icon {
+  width: 44px;
+  height: 44px;
+
   img {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.status-icon {
+  img {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.ctrl-icon--play {
+  width: 44px;
+  height: 44px;
+
+  img {
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -475,80 +493,5 @@ onBeforeUnmount(() => {
 
 .status-icon--active {
   background: rgba(255, 255, 255, 0.18);
-}
-
-@media (min-width: 900px) {
-  .play-window-box {
-    width: 100%;
-    padding: 0 38px;
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .play-window-inner {
-    padding: 5px 0;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    gap: 10px;
-  }
-
-  .play-window-top {
-    gap: 20px;
-  }
-
-  .meta-block {
-    flex: 0 1 clamp(200px, 32vw, 320px);
-    padding: 4px 8px 4px 6px;
-  }
-
-  .cover-box {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    border-radius: 10px;
-  }
-
-  .inform-box {
-    .music-name {
-      font-size: 15px;
-    }
-
-    .author {
-      font-size: 13px;
-    }
-  }
-
-  .control-box {
-    flex: 1;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .ctrl-icon {
-    width: 44px;
-    height: 44px;
-
-    img {
-      width: 32px;
-      height: 32px;
-    }
-  }
-
-  .status-icon {
-    img {
-      width: 16px;
-      height: 16px;
-    }
-  }
-
-  .ctrl-icon--play {
-    width: 44px;
-    height: 44px;
-
-    img {
-      width: 32px;
-      height: 32px;
-    }
-  }
 }
 </style>
