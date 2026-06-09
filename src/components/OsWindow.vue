@@ -1,6 +1,6 @@
 /* * os-window * @description: 窗口组件 */
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, provide, reactive } from "vue";
+import { ref, computed, onMounted, onUnmounted, provide, reactive, nextTick } from "vue";
 import type { VNode, Component } from "vue";
 import DialogNotification from "@/components/DialogNotification.vue";
 import minimize from "@/assets/icons/minimize.svg";
@@ -8,11 +8,19 @@ import close from "@/assets/icons/close.svg";
 import maximize from "@/assets/icons/maximize.svg";
 import maximizeDefalut from "@/assets/icons/maximize-defalut.svg";
 
-defineProps<{ title?: string; icon?: string }>();
+const props = defineProps<{
+  title?: string;
+  icon?: string;
+  /** 任务栏图标屏幕坐标，用于最小化时窗口飞向图标 */
+  minimizeTarget?: { x: number; y: number };
+}>();
 
 const emit = defineEmits<{ close: []; minimize: [] }>();
 
 const isMinimized = defineModel<boolean>("minimized", { default: false });
+
+// 首次打开入场动画
+const isEntering = ref(true);
 
 // ---- overlay 弹窗系统 ----
 // 子组件通过 inject 获取此对象，设置 visible/title/content 来在窗口内显示弹窗
@@ -39,7 +47,6 @@ provide("osOverlay", osOverlay);
 const MIN_WIDTH = 350;
 const MIN_HEIGHT = 320;
 const MIN_VISIBLE = 150;
-const EMPTY_STYLE = Object.freeze({});
 
 // ---- window state ----
 const isMaximized = ref(false);
@@ -87,7 +94,14 @@ const clampTop = (value: number) => Math.max(0, value);
 
 // ---- computed ----
 const windowStyle = computed(() => {
-  if (isMaximized.value) return EMPTY_STYLE;
+  if (isMaximized.value) {
+    return {
+      left: "0",
+      top: "0",
+      width: "100vw",
+      height: "100vh",
+    };
+  }
   return {
     left: `${left.value}px`,
     top: `${top.value}px`,
@@ -98,11 +112,27 @@ const windowStyle = computed(() => {
 
 const windowClass = computed(() => ({
   "os-window": true,
+  "os-window--enter": isEntering.value && !isMinimized.value,
   "os-window--minimized": isMinimized.value,
   "os-window--maximized": isMaximized.value,
   "os-window--dragging": dragging.value,
   "os-window--resizing": resizing.value,
 }));
+
+// 最小化动画方向：通过 CSS 变量精确指向任务栏对应图标
+const minimizeVars = computed(() => {
+  if (!isMinimized.value || !props.minimizeTarget) return {};
+
+  const winCenterX = left.value + width.value / 2;
+  const winCenterY = top.value + height.value / 2;
+  const dx = Math.round(props.minimizeTarget.x - winCenterX);
+  const dy = Math.round(props.minimizeTarget.y - winCenterY);
+
+  return {
+    "--min-dx": `${dx}px`,
+    "--min-dy": `${dy}px`,
+  };
+});
 
 // ---- minimize / maximize / close ----
 const toggleMinimize = () => {
@@ -315,6 +345,13 @@ onMounted(() => {
 
   document.addEventListener("mousemove", onMouseMove);
   document.addEventListener("mouseup", onMouseUp);
+
+  // 首次打开：先以入场状态渲染（opacity:0 + scale），下一帧移除 class 触发过渡
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      isEntering.value = false;
+    });
+  });
 });
 
 onUnmounted(() => {
@@ -328,7 +365,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div :class="windowClass" :style="windowStyle">
+  <div :class="windowClass" :style="[windowStyle, minimizeVars]">
     <!-- resize handles -->
     <div class="os-resize os-resize--n" data-resize="n" @mousedown="onResizeMouseDown"></div>
     <div class="os-resize os-resize--s" data-resize="s" @mousedown="onResizeMouseDown"></div>
@@ -377,7 +414,12 @@ onUnmounted(() => {
 
     <!-- overlay 弹窗：OsWindow 自己渲染，不用 Teleport，遮罩不盖 titlebar -->
     <div v-if="osOverlay.visible" class="os-window__overlay" @click.self="onOverlayMaskClick">
-      <DialogNotification :visible="true" :title="osOverlay.title" inline @update:visible="osOverlay.visible = false">
+      <DialogNotification
+        :visible="true"
+        :title="osOverlay.title"
+        inline
+        @update:visible="osOverlay.visible = false"
+      >
         <template #content>
           <component :is="osOverlay.content" v-if="osOverlay.content" />
         </template>
@@ -403,6 +445,21 @@ $text-color: #000;
   backdrop-filter: blur(30px);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
   overflow: hidden;
+  transition:
+    left 0.15s ease-in,
+    top 0.15s ease-in,
+    width 0.15s ease-in,
+    height 0.15s ease-in,
+    border-radius 0.15s ease-in,
+    border-color 0.15s ease-in,
+    opacity 0.2s ease-in,
+    transform 0.2s ease-in;
+
+  // 首次打开入场：从缩小+透明过渡到正常
+  &--enter {
+    opacity: 0;
+    transform: scale(0.85);
+  }
 
   &--dragging,
   &--resizing {
@@ -410,14 +467,19 @@ $text-color: #000;
     user-select: none;
   }
 
-  // 最小化：由 v-os-animate 指令控制显隐动画
+  // 最小化：向任务栏图标方向收缩 + 淡出
+  // --min-dx / --min-dy 由 JS 根据图标位置动态注入，未注入时退化为正下方
+  &--minimized {
+    opacity: 0;
+    transform: translate(var(--min-dx, 0px), var(--min-dy, 120px)) scale(0.35);
+    transform-origin: bottom center;
+    pointer-events: none;
+  }
 
   // 最大化：全屏铺满
   &--maximized {
-    inset: 0;
-    z-index: 100;
     border-radius: 0;
-    border: none;
+    border-color: transparent;
 
     .os-resize {
       display: none;

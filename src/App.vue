@@ -4,6 +4,7 @@ import appConfig from "@/config/index";
 import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
 import IMusic from "@/views/IMusic/IndexView.vue";
+import UiColor from "@/views/UiColor/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
@@ -14,6 +15,8 @@ const showWindow = ref(false);
 const activeApp = ref<Array<AppItem>>([]);
 const focusWindow = ref<string | number>("");
 const minimizeWindow = ref<Array<string | number>>([]);
+// 记录每个应用任务栏图标的屏幕坐标，用于最小化动画目标
+const minimizeTarget = ref<Record<string, { x: number; y: number }>>({});
 
 const toggleMinimized = (app: AppItem) => {
   // 是否已经显示，已经显示就给最小化，没有就取消
@@ -60,6 +63,18 @@ const handleCloseApp = (app: AppItem) => {
 
 // 最小化应用
 const handleMinimize = (app: AppItem) => {
+  // 记录任务栏图标位置，用于窗口向图标收缩的动画
+  const dockEl = document.querySelector(`[data-app-dock="${app.enName}"]`);
+  if (dockEl) {
+    const rect = dockEl.getBoundingClientRect();
+    minimizeTarget.value = {
+      ...minimizeTarget.value,
+      [app.enName]: {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      },
+    };
+  }
   minimizeWindow.value.push(app.enName);
 };
 
@@ -103,10 +118,12 @@ watch(
       @click="clickWindow(app)"
       @mousedown="clickWindow(app)"
       :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
-      v-show="!minimizeWindow.includes(app.enName)"
+      :minimized="minimizeWindow.includes(app.enName)"
+      :minimize-target="minimizeTarget[app.enName]"
     >
       <Setting v-if="app.enName === 'Setting'" />
       <IMusic v-else-if="app.enName === 'iMusic'" />
+      <UiColor v-else-if="app.enName === 'uiColor'" />
     </OsWindow>
 
     <!-- 底部任务栏 -->
@@ -119,8 +136,8 @@ watch(
           v-for="(app, idx) in activeApp"
           :key="idx"
           class="taskbar__item"
+          :data-app-dock="app.enName"
           @click="toggleMinimized(app)"
-          ref="dockItems"
         >
           <div class="taskbar__item-icon">
             <img :src="app.icon" alt="icon" />

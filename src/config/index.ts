@@ -1,5 +1,6 @@
 import setting from "@/assets/icons/app/setting.svg";
 import music from "@/assets/icons/app/music.svg";
+import uiColors from "@/assets/icons/app/uiColors.svg";
 
 const appConfig = [
   {
@@ -11,6 +12,11 @@ const appConfig = [
     zhName: "iMusic",
     enName: "iMusic",
     icon: music,
+  },
+  {
+    zhName: "UI取色器",
+    enName: "uiColor",
+    icon: uiColors,
   },
 ];
 
