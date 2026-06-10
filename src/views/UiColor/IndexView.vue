@@ -2,7 +2,11 @@
 import { ref } from "vue";
 import colorshapes from "@/assets/uiColors/icons/colorshapes.svg";
 import colorsCreate from "@/assets/uiColors/icons/colorsCreate.svg";
-import imageColors from "@/assets/uiColors/icons/imageColors.svg";
+import imageColorsIcon from "@/assets/uiColors/icons/imageColors.svg";
+import ExampleColors from "./components/ExampleColors.vue";
+import CustomColors from "./components/CustomColors.vue";
+import ImageColors from "./components/ImageColors.vue";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 const optionBtn = [
   {
@@ -15,7 +19,7 @@ const optionBtn = [
   },
   {
     name: "图片提取",
-    icon: imageColors,
+    icon: imageColorsIcon,
   },
 ];
 
@@ -23,28 +27,42 @@ const activeOption = ref(0);
 </script>
 
 <template>
-  <div class="index">
-    <div class="index--option-btn">
-      <div
-        class="item"
-        v-for="(item, idx) in optionBtn"
-        :key="idx"
-        @click="activeOption = idx"
-        :class="{ active: activeOption === idx }"
-      >
-        <img :src="item.icon" />
-        <span>{{ item.name }}</span>
+  <OverlayScrollbarsComponent
+    defer
+    style="height: 100%"
+    :options="{
+      scrollbars: {
+        autoHide: 'move',
+        autoHideDelay: 100,
+      },
+    }"
+  >
+    <div class="index">
+      <div class="index--option-btn">
+        <div
+          class="item"
+          v-for="(item, idx) in optionBtn"
+          :key="idx"
+          @click="activeOption = idx"
+          :class="{ active: activeOption === idx }"
+        >
+          <img :src="item.icon" />
+          <span>{{ item.name }}</span>
+        </div>
+      </div>
+      <div class="index--content">
+        <ExampleColors v-show="activeOption === 0"></ExampleColors>
+        <CustomColors v-show="activeOption === 1"></CustomColors>
+        <ImageColors v-show="activeOption === 2"></ImageColors>
       </div>
     </div>
-    <div class="index--content"></div>
-  </div>
+  </OverlayScrollbarsComponent>
 </template>
 
 <style scoped lang="scss">
 $header-height: 60px;
 .index {
-  height: 100%;
-  overflow: auto;
+  height: calc(100% - $header-height);
   &--option-btn {
     display: flex;
     align-items: center;
@@ -54,14 +72,16 @@ $header-height: 60px;
       to right,
       transparent 0%,
       transparent 1%,
-      rgba(255, 255, 255, 0.8) 20%,
-      rgba(255, 255, 255, 0.8) 77%,
+      rgba(255, 255, 255, 0.95) 10%,
+      rgba(255, 255, 255, 0.95) 90%,
       transparent 99%,
       transparent 100%
     );
     height: $header-height;
     position: fixed;
     width: 100%;
+    top: 36px;
+    z-index: 1;
     .item {
       display: flex;
       align-items: center;
@@ -86,8 +106,8 @@ $header-height: 60px;
   }
   &--content {
     width: 100%;
-    height: calc(100% - $header-height);
-    background-color: #fff;
+    min-height: 100%;
+    height: 100%;
     margin-top: $header-height;
   }
 }

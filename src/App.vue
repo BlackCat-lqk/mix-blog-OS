@@ -5,6 +5,7 @@ import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
 import IMusic from "@/views/IMusic/IndexView.vue";
 import UiColor from "@/views/UiColor/IndexView.vue";
+import ImageConverter from "@/views/ImageConverter/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
@@ -124,12 +125,13 @@ watch(
       <Setting v-if="app.enName === 'Setting'" />
       <IMusic v-else-if="app.enName === 'iMusic'" />
       <UiColor v-else-if="app.enName === 'uiColor'" />
+      <ImageConverter v-else-if="app.enName === 'imageConverter'"></ImageConverter>
     </OsWindow>
 
     <!-- 底部任务栏 -->
     <div class="taskbar">
       <div class="taskbar__left">
-        <span class="taskbar__start">Mix Blog OS</span>
+        <span class="taskbar__start">MIX OS</span>
       </div>
       <div class="taskbar__center">
         <button
@@ -154,7 +156,7 @@ watch(
 $taskbar-h: 44px;
 $primary: #0078d4;
 $bg-dark: #1e1e1e;
-$taskbar-bg: rgba(26, 26, 46, 0.8);
+$taskbar-bg: rgba(255, 255, 255, 0.7);
 $text-color: #fff;
 $item-h: 80px;
 $gap: 20px;
@@ -232,10 +234,10 @@ $gap: 20px;
   height: $taskbar-h;
   padding: 0 12px;
   background: $taskbar-bg;
-  border-top: 1px solid #2a2a3e;
+  border-top: 1px solid #a0a4a8;
   flex-shrink: 0;
   user-select: none;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
   &__left {
     width: 160px;
     flex-shrink: 0;
@@ -265,16 +267,16 @@ $gap: 20px;
   padding: 4px;
   border: none;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.06);
   color: #ccc;
   cursor: pointer;
   transition: background 0.15s;
   &:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.12);
   }
 
   &--active {
-    background: rgba(0, 120, 212, 0.3);
+    background: rgba(0, 120, 212, 1);
     color: #fff;
   }
 

@@ -22,7 +22,10 @@
 body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  font-family: "Inter", "Roboto", "PingFang SC", sans-serif, "Microsoft YaHei";
+  // font-family: "Inter", "Roboto", "PingFang SC", sans-serif, "Microsoft YaHei";
+  font-family:
+    Mulish,
+    Mulish Fallback;
 }
 
 img,

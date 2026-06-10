@@ -377,7 +377,11 @@ onUnmounted(() => {
     <div class="os-resize os-resize--sw" data-resize="sw" @mousedown="onResizeMouseDown"></div>
 
     <!-- titlebar -->
-    <div class="os-window__titlebar" @mousedown="onTitlebarMouseDown">
+    <div
+      class="os-window__titlebar"
+      @mousedown="onTitlebarMouseDown"
+      @dblclick.stop="toggleMaximize"
+    >
       <div class="os-window__titlebar__lf">
         <div class="os-window__icon">
           <img :src="icon" alt="icon" />
