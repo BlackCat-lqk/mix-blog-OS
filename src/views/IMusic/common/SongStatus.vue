@@ -1,8 +1,10 @@
 <template>
   <div class="song-status">
     <div class="status-head">
-      <img src="@/assets/iMusic/icons/playing.svg" />
-      <span>Now Playing</span>
+      <ToolTip content="Now Playing" position="top" theme="dark">
+        <img src="@/assets/iMusic/icons/playing.svg" />
+        <span>Now Playing</span>
+      </ToolTip>
     </div>
 
     <div class="current-song">
@@ -54,7 +56,7 @@ import { useEventStore } from "@/stores/iMusic/eventStore";
 import defaultCover from "@/assets/iMusic/images/cover.jpg";
 import { formatTime } from "@/utils/formatTime";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
-
+import ToolTip from "@/components/Tooltip.vue";
 interface MusicItem {
   id?: number | string;
   title: string;

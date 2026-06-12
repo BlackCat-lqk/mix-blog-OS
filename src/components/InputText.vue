@@ -65,14 +65,10 @@ watch(
 const charCount = computed(() => innerValue.value.length);
 
 // 是否超过限制
-const isOverLimit = computed(() =>
-  props.maxlength ? charCount.value > props.maxlength : false,
-);
+const isOverLimit = computed(() => (props.maxlength ? charCount.value > props.maxlength : false));
 
 // 剩余可输入字数
-const remaining = computed(() =>
-  props.maxlength ? props.maxlength - charCount.value : null,
-);
+const remaining = computed(() => (props.maxlength ? props.maxlength - charCount.value : null));
 
 // 是否可交互（未禁用且未加载中）
 const isInteractive = computed(() => !props.disabled && !props.loading);
@@ -208,7 +204,7 @@ watch(
 
 <style scoped lang="scss">
 // ---- tokens ----
-$bg: #fff;
+$bg: rgba(255, 255, 255, 0.7);
 $bg-dark: rgba(30, 30, 30, 0.6);
 $border-color: #d0d5dd;
 $border-color-dark: rgba(255, 255, 255, 0.12);
@@ -246,7 +242,9 @@ $radius: 6px;
   border: 1px solid $border-color;
   border-radius: $radius;
   background: $bg;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
+  transition:
+    border-color 200ms ease,
+    box-shadow 200ms ease;
 
   // 可见标签
   &__label {
@@ -267,7 +265,7 @@ $radius: 6px;
   // ---- focus: 在容器+textarea 上都可见 ----
   &:focus-within:not(.input-text--disabled):not(.input-text--loading) {
     border-color: $focus-ring;
-    box-shadow: 0 0 0 3px rgba(0, 103, 192, 0.15);
+    box-shadow: 0 0 20px 1px rgba(0, 103, 192, 0.15);
   }
 
   // ---- 状态修饰符 ----

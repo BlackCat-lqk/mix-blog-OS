@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import { Message } from "@/utils/message";
 import appConfig from "@/config/index";
 import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
@@ -79,7 +80,9 @@ const handleMinimize = (app: AppItem) => {
   }
   minimizeWindow.value.push(app.enName);
 };
-
+const handelTest = () => {
+  Message.warning("成功点击", { position: "top-right", duration: 3000 });
+};
 watch(
   () => store.initialized,
   (ready) => {
@@ -133,7 +136,9 @@ watch(
     <!-- 底部任务栏 -->
     <div class="taskbar">
       <div class="taskbar__left">
-        <span class="taskbar__start">MIX OS</span>
+        <ToolTip content="提示文字" position="top" theme="dark">
+          <span class="taskbar__start" @click="handelTest">MIX OS</span>
+        </ToolTip>
       </div>
       <div class="taskbar__center">
         <button
