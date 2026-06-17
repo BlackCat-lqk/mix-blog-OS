@@ -56,7 +56,7 @@ import { useEventStore } from "@/stores/iMusic/eventStore";
 import defaultCover from "@/assets/iMusic/images/cover.jpg";
 import { formatTime } from "@/utils/formatTime";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
-import ToolTip from "@/components/Tooltip.vue";
+import ToolTip from "@/components/ToolTip.vue";
 interface MusicItem {
   id?: number | string;
   title: string;
