@@ -1,3 +1,4 @@
+<!-- * @description: 图片转换应用 — 批量格式转换、缩放、质量调节 -->
 <script setup lang="ts">
 import { ref, onUnmounted } from "vue";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
@@ -19,6 +20,8 @@ const tabs = [
   { name: "Favicon 制作", desc: "多尺寸 · 一键导出" },
 ];
 
+const MAX_FILES = 5;
+
 // ---- 格式转换模块 ----
 interface PreviewItem {
   file: File;
@@ -26,7 +29,6 @@ interface PreviewItem {
   id: string;
 }
 
-const MAX_FILES = 5;
 const previewItems = ref<PreviewItem[]>([]);
 let idCounter = 0;
 
@@ -36,7 +38,7 @@ const batchMode = ref(true);
 const converting = ref(false);
 const results = ref<ConvertResultType[]>([]);
 
-function handleFiles(files: File[]) {
+const handleFiles = (files: File[]) => {
   const remaining = MAX_FILES - previewItems.value.length;
   if (remaining <= 0) return;
 
@@ -50,20 +52,20 @@ function handleFiles(files: File[]) {
   }
 }
 
-function removeItem(id: string) {
+const removeItem = (id: string) => {
   const item = previewItems.value.find((p) => p.id === id);
   if (item) URL.revokeObjectURL(item.url);
   previewItems.value = previewItems.value.filter((p) => p.id !== id);
 }
 
-function clearAll() {
+const clearAll = () => {
   for (const item of previewItems.value) {
     URL.revokeObjectURL(item.url);
   }
   previewItems.value = [];
 }
 
-async function doConvert() {
+const doConvert = async () => {
   if (previewItems.value.length === 0 || converting.value) return;
   converting.value = true;
   results.value = [];
@@ -78,7 +80,7 @@ async function doConvert() {
   converting.value = false;
 }
 
-function clearResults() {
+const clearResults = () => {
   results.value = [];
 }
 

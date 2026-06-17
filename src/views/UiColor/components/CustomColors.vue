@@ -1,3 +1,4 @@
+<!-- * @description: 自定义颜色编辑器 — HSV/HSL/LAB 色彩空间、渐变停止点、拾色器 -->
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { _copyToClipboard } from "@/utils/publickFun";
@@ -58,7 +59,7 @@ const labBuf = ref({ l: "100", a: "0", b: "0" });
 const hexBuf = ref("#FFFFFF");
 
 // 同步所有缓冲区（跳过正在编辑的模式）
-function syncBuffers(skip?: "rgb" | "hsv" | "lab") {
+const syncBuffers = (skip?: "rgb" | "hsv" | "lab") => {
   if (skip !== "rgb") {
     const rgb = currentRgb.value;
     rgbBuf.value = { r: String(rgb.r), g: String(rgb.g), b: String(rgb.b) };
@@ -104,11 +105,15 @@ const sortedStops = computed(() =>
   [...gradientStops.value].sort((a, b) => a.position - b.position),
 );
 
-/** hex → {r,g,b} 辅助 */
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const hsv = hexToHsv(hex);
-  if (!hsv) return { r: 0, g: 0, b: 0 };
-  return hsvToRgb(hsv);
+/** hex -> {r,g,b} (direct parse, no HSV intermediate) */
+const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+  const clean = hex.replace("#", "").trim();
+  if (!/^[0-9A-Fa-f]{6}$/.test(clean)) return { r: 0, g: 0, b: 0 };
+  return {
+    r: parseInt(clean.substring(0, 2), 16),
+    g: parseInt(clean.substring(2, 4), 16),
+    b: parseInt(clean.substring(4, 6), 16),
+  };
 }
 
 // 预览用的渐变 CSS
@@ -152,7 +157,7 @@ const gradientCSSText = computed(() => {
 
 // ---- 从内部 HSV 状态更新所有派生值 ----
 
-function updateFromHsv(h: number, s: number, v: number) {
+const updateFromHsv = (h: number, s: number, v: number) => {
   hue.value = ((h % 360) + 360) % 360;
   saturation.value = Math.max(0, Math.min(100, s));
   value.value = Math.max(0, Math.min(100, v));
@@ -166,12 +171,12 @@ function updateFromHsv(h: number, s: number, v: number) {
   }
 }
 
-function updateFromRgb(r: number, g: number, b: number) {
+const updateFromRgb = (r: number, g: number, b: number) => {
   const hsv = rgbToHsv({ r, g, b });
   updateFromHsv(hsv.h, hsv.s, hsv.v);
 }
 
-function updateFromLab(l: number, a: number, b: number) {
+const updateFromLab = (l: number, a: number, b: number) => {
   const clamped: LAB = {
     l: Math.max(0, Math.min(100, l)),
     a: Math.max(-128, Math.min(127, a)),
@@ -182,7 +187,7 @@ function updateFromLab(l: number, a: number, b: number) {
 }
 // ---- HEX 输入 ----
 
-function onHexInput() {
+const onHexInput = () => {
   let raw = hexBuf.value.trim();
   if (!raw.startsWith("#")) raw = "#" + raw;
   hexBuf.value = raw;
@@ -204,7 +209,7 @@ function onHexInput() {
   }
 }
 
-function onHexBlur() {
+const onHexBlur = () => {
   // 无效则还原
   if (!hexToHsv(hexBuf.value)) {
     hexBuf.value = hexValue.value;
@@ -213,7 +218,7 @@ function onHexBlur() {
 
 // ---- RGB 输入 ----
 
-function onRgbInput() {
+const onRgbInput = () => {
   const r = parseInt(rgbBuf.value.r);
   const g = parseInt(rgbBuf.value.g);
   const b = parseInt(rgbBuf.value.b);
@@ -226,7 +231,7 @@ function onRgbInput() {
   }
 }
 
-function onRgbBlur() {
+const onRgbBlur = () => {
   // 无效字段还原为当前值
   const real = currentRgb.value;
   if (isNaN(parseInt(rgbBuf.value.r))) rgbBuf.value.r = String(real.r);
@@ -238,17 +243,17 @@ function onRgbBlur() {
   onRgbInput();
 }
 
-function onRgbFocus() {
+const onRgbFocus = () => {
   activeEditMode.value = "rgb";
 }
 
-function onRgbLeave() {
+const onRgbLeave = () => {
   activeEditMode.value = null;
 }
 
 // ---- HSV 输入 ----
 
-function onHsvInput() {
+const onHsvInput = () => {
   const h = parseInt(hsvBuf.value.h);
   const s = parseInt(hsvBuf.value.s);
   const v = parseInt(hsvBuf.value.v);
@@ -261,7 +266,7 @@ function onHsvInput() {
   }
 }
 
-function onHsvBlur() {
+const onHsvBlur = () => {
   const real = currentHsv.value;
   if (isNaN(parseInt(hsvBuf.value.h))) hsvBuf.value.h = String(real.h);
   if (isNaN(parseInt(hsvBuf.value.s))) hsvBuf.value.s = String(real.s);
@@ -272,17 +277,17 @@ function onHsvBlur() {
   onHsvInput();
 }
 
-function onHsvFocus() {
+const onHsvFocus = () => {
   activeEditMode.value = "hsv";
 }
 
-function onHsvLeave() {
+const onHsvLeave = () => {
   activeEditMode.value = null;
 }
 
 // ---- LAB 输入 ----
 
-function onLabInput() {
+const onLabInput = () => {
   const l = parseInt(labBuf.value.l);
   const a = parseInt(labBuf.value.a);
   const b = parseInt(labBuf.value.b);
@@ -291,7 +296,7 @@ function onLabInput() {
   }
 }
 
-function onLabBlur() {
+const onLabBlur = () => {
   const real = currentLab.value;
   if (isNaN(parseInt(labBuf.value.l))) labBuf.value.l = String(real.l);
   if (isNaN(parseInt(labBuf.value.a))) labBuf.value.a = String(real.a);
@@ -302,11 +307,11 @@ function onLabBlur() {
   onLabInput();
 }
 
-function onLabFocus() {
+const onLabFocus = () => {
   activeEditMode.value = "lab";
 }
 
-function onLabLeave() {
+const onLabLeave = () => {
   activeEditMode.value = null;
 }
 
@@ -332,7 +337,7 @@ const hueCursorStyle = computed(() => ({
   top: `${(hue.value / 360) * 100}%`,
 }));
 
-function fieldPosToSv(clientX: number, clientY: number) {
+const fieldPosToSv = (clientX: number, clientY: number) => {
   const el = fieldRef.value;
   if (!el) return { s: saturation.value, v: value.value };
   const rect = el.getBoundingClientRect();
@@ -344,21 +349,21 @@ function fieldPosToSv(clientX: number, clientY: number) {
   };
 }
 
-function onFieldMouseDown(e: MouseEvent) {
+const onFieldMouseDown = (e: MouseEvent) => {
   isDraggingField.value = true;
   const { s, v } = fieldPosToSv(e.clientX, e.clientY);
   updateFromHsv(hue.value, Math.round(s), Math.round(v));
   e.preventDefault();
 }
 
-function onHueMouseDown(e: MouseEvent) {
+const onHueMouseDown = (e: MouseEvent) => {
   isDraggingHue.value = true;
   const h = huePosFromClient(e.clientY);
   updateFromHsv(Math.round(h), saturation.value, value.value);
   e.preventDefault();
 }
 
-function huePosFromClient(clientY: number): number {
+const huePosFromClient = (clientY: number): number => {
   const el = hueRef.value;
   if (!el) return hue.value;
   const rect = el.getBoundingClientRect();
@@ -368,7 +373,7 @@ function huePosFromClient(clientY: number): number {
 
 // ---- 全局鼠标事件 ----
 
-function onMouseMove(e: MouseEvent) {
+const onMouseMove = (e: MouseEvent) => {
   if (isDraggingStop.value && draggingStopId.value !== null) {
     const pos = stopPosFromClient(e.clientX);
     const stop = gradientStops.value.find((s) => s.id === draggingStopId.value);
@@ -384,7 +389,7 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-function onMouseUp() {
+const onMouseUp = () => {
   if (isDraggingStop.value) {
     // 延迟重置，让 click 事件能检测到刚拖过
     setTimeout(() => {
@@ -398,11 +403,11 @@ function onMouseUp() {
 
 // ---- Touch 事件 ----
 
-function getFirstTouch(e: TouchEvent): Touch | undefined {
+const getFirstTouch = (e: TouchEvent): Touch | undefined => {
   return e.touches[0];
 }
 
-function onFieldTouchStart(e: TouchEvent) {
+const onFieldTouchStart = (e: TouchEvent) => {
   const touch = getFirstTouch(e);
   if (touch) {
     isDraggingField.value = true;
@@ -412,7 +417,7 @@ function onFieldTouchStart(e: TouchEvent) {
   }
 }
 
-function onHueTouchStart(e: TouchEvent) {
+const onHueTouchStart = (e: TouchEvent) => {
   const touch = getFirstTouch(e);
   if (touch) {
     isDraggingHue.value = true;
@@ -421,7 +426,7 @@ function onHueTouchStart(e: TouchEvent) {
   }
 }
 
-function onTouchMove(e: TouchEvent) {
+const onTouchMove = (e: TouchEvent) => {
   const touch = getFirstTouch(e);
   if (!touch) return;
 
@@ -441,7 +446,7 @@ function onTouchMove(e: TouchEvent) {
   }
 }
 
-function onTouchEnd() {
+const onTouchEnd = () => {
   if (isDraggingStop.value) {
     setTimeout(() => {
       isDraggingStop.value = false;
@@ -454,7 +459,7 @@ function onTouchEnd() {
 
 // ---- 渐变停止点交互 ----
 
-function stopPosFromClient(clientX: number): number {
+const stopPosFromClient = (clientX: number): number => {
   const el = areaColorRef.value;
   if (!el) return 0;
   const rect = el.getBoundingClientRect();
@@ -462,7 +467,7 @@ function stopPosFromClient(clientX: number): number {
   return (x / rect.width) * 100;
 }
 
-function selectStop(id: number | null) {
+const selectStop = (id: number | null) => {
   selectedStopId.value = id;
   if (id !== null) {
     const stop = gradientStops.value.find((s) => s.id === id);
@@ -470,7 +475,7 @@ function selectStop(id: number | null) {
   }
 }
 
-function onStopMouseDown(e: MouseEvent, stopId: number) {
+const onStopMouseDown = (e: MouseEvent, stopId: number) => {
   isDraggingStop.value = true;
   draggingStopId.value = stopId;
   selectStop(stopId);
@@ -478,7 +483,7 @@ function onStopMouseDown(e: MouseEvent, stopId: number) {
   e.stopPropagation();
 }
 
-function onAreaColorTouchStart(e: TouchEvent) {
+const onAreaColorTouchStart = (e: TouchEvent) => {
   const target = (e.target as HTMLElement)?.closest?.("[data-stop-id]") as HTMLElement | null;
   if (!target) return;
   const stopId = Number(target.dataset.stopId);
@@ -493,7 +498,7 @@ function onAreaColorTouchStart(e: TouchEvent) {
   }
 }
 
-function onAreaColorClick(e: MouseEvent) {
+const onAreaColorClick = (e: MouseEvent) => {
   // 刚拖完不添加新停止点
   if (isDraggingStop.value) return;
 
@@ -507,7 +512,7 @@ function onAreaColorClick(e: MouseEvent) {
   selectStop(newStop.id);
 }
 
-function removeStop(stopId: number) {
+const removeStop = (stopId: number) => {
   if (gradientStops.value.length <= 2) return; // 最少保留2个
   const idx = gradientStops.value.findIndex((s) => s.id === stopId);
   if (idx !== -1) {
@@ -518,7 +523,7 @@ function removeStop(stopId: number) {
 
 // ---- 初始化 & 外部更新 ----
 
-function setFromHex(hex: string) {
+const setFromHex = (hex: string) => {
   const hsv = hexToHsv(hex);
   if (hsv) {
     hue.value = hsv.h;

@@ -1,3 +1,4 @@
+<!-- * @description: 图库应用 — 图片导入、网格浏览、多选删除、全屏查看器 -->
 <script setup lang="ts">
 import { ref, computed, onUnmounted, type Ref } from "vue";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
@@ -12,6 +13,9 @@ import type { PhotoItem, ToolbarTab, ViewerState } from "./components/types";
 // 状态
 // ============================================================
 
+// NOTE: photos uses deep ref() rather than shallowRef() because
+// toggleFavoriteViewer mutates individual items (photo.favorite = !photo.favorite).
+// shallowRef would not track these mutations and would break viewer reactivity.
 const photos: Ref<PhotoItem[]> = ref([]);
 const loading = ref(false);
 const activeTab = ref<ToolbarTab>("gallery");
@@ -33,7 +37,7 @@ const selectedCount = computed(() => selectedIds.value.size);
 // Demo 数据（picsum 占位图）
 // ============================================================
 
-function generateDemoPhotos(): PhotoItem[] {
+const generateDemoPhotos = (): PhotoItem[] => {
   const demoPhotos: PhotoItem[] = [];
   // 多种宽高比的种子尺寸（宽 × 高）
   const dimensions = [
@@ -70,11 +74,11 @@ photos.value = generateDemoPhotos();
 // 文件导入
 // ============================================================
 
-function triggerImport() {
+const triggerImport = () => {
   fileInput.value?.click();
 }
 
-async function handleFileChange(e: Event) {
+const handleFileChange = async (e: Event) => {
   const files = (e.target as HTMLInputElement).files;
   if (!files || files.length === 0) return;
 
@@ -105,7 +109,7 @@ async function handleFileChange(e: Event) {
   (e.target as HTMLInputElement).value = "";
 }
 
-function getImageDimensions(url: string): Promise<{ width: number; height: number }> {
+const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -122,16 +126,16 @@ function getImageDimensions(url: string): Promise<{ width: number; height: numbe
 // 选择逻辑
 // ============================================================
 
-function enterSelectionMode() {
+const enterSelectionMode = () => {
   selectionMode.value = true;
 }
 
-function exitSelectionMode() {
+const exitSelectionMode = () => {
   selectionMode.value = false;
   selectedIds.value = new Set();
 }
 
-function toggleSelect(id: string) {
+const toggleSelect = (id: string) => {
   const next = new Set(selectedIds.value);
   if (next.has(id)) {
     next.delete(id);
@@ -145,7 +149,7 @@ function toggleSelect(id: string) {
   selectedIds.value = next;
 }
 
-function deleteSelected() {
+const deleteSelected = () => {
   const ids = selectedIds.value;
   // 清理 Object URL
   for (const photo of photos.value) {
@@ -161,19 +165,19 @@ function deleteSelected() {
 // 查看器逻辑
 // ============================================================
 
-function openViewer(index: number) {
+const openViewer = (index: number) => {
   viewer.value = { visible: true, currentIndex: index };
 }
 
-function closeViewer() {
+const closeViewer = () => {
   viewer.value = { visible: false, currentIndex: 0 };
 }
 
-function navigateViewer(index: number) {
+const navigateViewer = (index: number) => {
   viewer.value = { ...viewer.value, currentIndex: index };
 }
 
-function deleteFromViewer(index: number) {
+const deleteFromViewer = (index: number) => {
   const photo = photos.value[index];
   if (photo && photo.url.startsWith("blob:")) {
     URL.revokeObjectURL(photo.url);
@@ -188,7 +192,7 @@ function deleteFromViewer(index: number) {
   }
 }
 
-function toggleFavoriteViewer(index: number) {
+const toggleFavoriteViewer = (index: number) => {
   const photo = photos.value[index];
   if (photo) {
     photo.favorite = !photo.favorite;

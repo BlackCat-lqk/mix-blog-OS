@@ -1,5 +1,6 @@
+<!-- * @description: 图片取色器 — 从上传图片中提取主要颜色 -->
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, onUnmounted } from "vue";
 import { _copyToClipboard } from "@/utils/publickFun";
 
 // ---- 类型 ----
@@ -23,11 +24,11 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 
 // ---- 文件选择 ----
 
-function openFileDialog() {
+const openFileDialog = () => {
   fileInputRef.value?.click();
 }
 
-function onFileSelected(e: Event) {
+const onFileSelected = (e: Event) => {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
   if (file) processFile(file);
@@ -37,16 +38,16 @@ function onFileSelected(e: Event) {
 
 // ---- 拖拽支持 ----
 
-function onDragOver(e: DragEvent) {
+const onDragOver = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = true;
 }
 
-function onDragLeave() {
+const onDragLeave = () => {
   isDragOver.value = false;
 }
 
-function onDrop(e: DragEvent) {
+const onDrop = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = false;
   const file = e.dataTransfer?.files?.[0];
@@ -55,7 +56,15 @@ function onDrop(e: DragEvent) {
 
 // ---- 文件处理 & 颜色提取 ----
 
-function processFile(file: File) {
+const isMounted = ref(true);
+let activeReader: FileReader | null = null;
+
+onUnmounted(() => {
+  isMounted.value = false;
+  activeReader?.abort();
+});
+
+const processFile = (file: File) => {
   if (!file.type.startsWith("image/")) {
     alert("请选择图片文件（PNG / JPG / WebP / GIF / BMP 等）");
     return;
@@ -63,20 +72,30 @@ function processFile(file: File) {
 
   imageName.value = file.name;
 
+  // Abort any previous in-progress read
+  activeReader?.abort();
+
   const reader = new FileReader();
+  activeReader = reader;
+
   reader.onload = (ev) => {
+    if (!isMounted.value) return;
     const dataUrl = ev.target?.result as string;
     imageSrc.value = dataUrl;
     extractColors(dataUrl);
   };
+  reader.onerror = () => {
+    activeReader = null;
+  };
   reader.readAsDataURL(file);
 }
 
-function extractColors(dataUrl: string) {
+const extractColors = (dataUrl: string) => {
   isProcessing.value = true;
 
   const img = new Image();
   img.onload = () => {
+    if (!isMounted.value) return;
     // 缩放以提升解析性能（长边不超过 200px）
     const maxDim = 200;
     let w = img.naturalWidth;
@@ -138,6 +157,7 @@ function extractColors(dataUrl: string) {
   };
 
   img.onerror = () => {
+    if (!isMounted.value) return;
     isProcessing.value = false;
     alert("图片加载失败，请重试");
   };
@@ -146,7 +166,7 @@ function extractColors(dataUrl: string) {
 }
 
 /** RGB → HEX */
-function rgbToHex(r: number, g: number, b: number): string {
+const rgbToHex = (r: number, g: number, b: number): string => {
   const clamp = (n: number) => Math.max(0, Math.min(255, n));
   const toHex = (n: number) => clamp(n).toString(16).padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();

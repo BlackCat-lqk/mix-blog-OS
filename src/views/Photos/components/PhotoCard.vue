@@ -34,6 +34,7 @@
   </div>
 </template>
 
+<!-- * @description: 图片卡片 — 缩略图展示、选中态、收藏标记 -->
 <script setup lang="ts">
 import { computed } from "vue";
 import type { PhotoItem } from "./types";
@@ -55,7 +56,7 @@ const aspectRatio = computed(() => {
   return `${width} / ${height}`;
 });
 
-function handleClick() {
+const handleClick = () => {
   if (props.selectionMode) {
     emit("selectToggle");
   } else {

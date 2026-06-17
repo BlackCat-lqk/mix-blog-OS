@@ -1,3 +1,4 @@
+<!-- * @description: 文件预览应用 — 多 Tab 文件查看器，支持拖拽打开和点击选择 -->
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import { useFileTabs } from "./useFileTabs";
@@ -8,6 +9,7 @@ import filesIcon from "@/assets/filePreview/images/files.svg";
 const {
   tabs,
   activeTabId,
+  fileInputRef,
   isDragOver,
   activeTab,
   showUpload,
@@ -23,7 +25,7 @@ const {
   handleDragLeave,
 } = useFileTabs();
 
-const { viewerHeight } = useViewerHeight(activeTabId);
+const { viewerWrapperRef, viewerHeight } = useViewerHeight(activeTabId);
 
 // ==================== 右键菜单 ====================
 const contextMenu = ref({

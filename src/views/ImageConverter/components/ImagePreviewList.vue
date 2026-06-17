@@ -1,3 +1,4 @@
+<!-- * @description: 图片预览列表 — 待转换文件的缩略图预览 -->
 <script setup lang="ts">
 import { computed } from "vue";
 import { formatFileSize } from "@/utils/imageConvert";
@@ -20,26 +21,27 @@ const emit = defineEmits<{
 
 const countText = computed(() => `${props.items.length} / ${props.maxFiles} 张图片`);
 
-function getFormatLabel(file: File): string {
+const FORMAT_COLOR_MAP: Record<string, string> = {
+  png: "#16a34a",
+  jpg: "#ea580c",
+  jpeg: "#ea580c",
+  webp: "#2563eb",
+  gif: "#9333ea",
+  bmp: "#0891b2",
+  svg: "#db2777",
+  avif: "#4f46e5",
+  ico: "#65a30d",
+  tiff: "#ca8a04",
+  tif: "#ca8a04",
+};
+
+const getFormatLabel = (file: File): string => {
   const ext = file.name.split(".").pop()?.toLowerCase() || "";
   return ext.toUpperCase();
 }
 
-function getFormatColor(ext: string): string {
-  const map: Record<string, string> = {
-    png: "#16a34a",
-    jpg: "#ea580c",
-    jpeg: "#ea580c",
-    webp: "#2563eb",
-    gif: "#9333ea",
-    bmp: "#0891b2",
-    svg: "#db2777",
-    avif: "#4f46e5",
-    ico: "#65a30d",
-    tiff: "#ca8a04",
-    tif: "#ca8a04",
-  };
-  return map[ext] || "#6b7280";
+const getFormatColor = (ext: string): string => {
+  return FORMAT_COLOR_MAP[ext] || "#6b7280";
 }
 </script>
 

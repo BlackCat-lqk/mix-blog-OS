@@ -38,6 +38,7 @@
   </div>
 </template>
 
+<!-- * @description: 操作栏 — 选中计数、批量删除、取消选择 -->
 <script setup lang="ts">
 defineProps<{
   selectedCount: number;

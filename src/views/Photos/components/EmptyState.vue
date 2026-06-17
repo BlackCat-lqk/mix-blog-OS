@@ -1,3 +1,4 @@
+<!-- * @description: 图库空状态 — 无图片时的引导占位 -->
 <template>
   <div class="empty-state" role="region" aria-label="空状态">
     <div class="empty-state__icon">

@@ -151,25 +151,25 @@ const arrowStyle = computed<CSSProperties>(() => ({
 
 // ---- methods ----
 
-function clearHideTimer() {
+const clearHideTimer = () => {
   if (hideTimer) {
     clearTimeout(hideTimer);
     hideTimer = null;
   }
 }
 
-function onScroll() {
+const onScroll = () => {
   isVisible.value = false;
 }
 
-function onShow() {
+const onShow = () => {
   if (props.trigger === "manual") return;
   clearHideTimer();
   isVisible.value = true;
   showTooltip();
 }
 
-function onHide() {
+const onHide = () => {
   if (props.trigger === "manual") return;
   clearHideTimer();
   hideTimer = setTimeout(() => {
@@ -179,19 +179,19 @@ function onHide() {
   }, props.hideDelay);
 }
 
-function onTooltipEnter() {
+const onTooltipEnter = () => {
   if (props.trigger === "manual") return;
   isHoveringTooltip = true;
   clearHideTimer();
 }
 
-function onTooltipLeave() {
+const onTooltipLeave = () => {
   if (props.trigger === "manual") return;
   isHoveringTooltip = false;
   onHide();
 }
 
-function calcPosition() {
+const calcPosition = () => {
   const triggerEl = triggerRef.value;
   const tooltipEl = tooltipRef.value;
   if (!triggerEl || !tooltipEl) return;
@@ -259,7 +259,7 @@ function calcPosition() {
     : { left: `${arrowLeft}px`, top: "" };
 }
 
-async function showTooltip() {
+const showTooltip = async () => {
   await nextTick();
   calcPosition();
 }

@@ -1,5 +1,6 @@
+<!-- * @description: 转换结果展示 — 生成文件预览与批量下载 -->
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, watch, onUnmounted, ref } from "vue";
 import {
   type ConvertResult,
   formatFileSize,
@@ -47,12 +48,30 @@ const displayItems = computed<DisplayItem[]>(() =>
   }),
 );
 
-function downloadOne(item: DisplayItem) {
+// Track created blob URLs for cleanup
+const createdUrls = ref<string[]>([]);
+
+// Revoke old blob URLs whenever displayItems recomputes
+watch(displayItems, (items) => {
+  // Revoke all previously tracked URLs
+  createdUrls.value.forEach((url) => URL.revokeObjectURL(url));
+  // Track the new URLs
+  createdUrls.value = items
+    .filter((d) => !d.isError)
+    .map((d) => d.previewUrl);
+});
+
+onUnmounted(() => {
+  createdUrls.value.forEach((url) => URL.revokeObjectURL(url));
+  createdUrls.value = [];
+});
+
+const downloadOne = (item: DisplayItem) => {
   if (item.isError) return;
   downloadBlob(item.result.blob, item.result.fileName);
 }
 
-function downloadAll() {
+const downloadAll = () => {
   const valid = displayItems.value.filter((d) => !d.isError);
   valid.forEach((d) => downloadBlob(d.result.blob, d.result.fileName));
 }

@@ -25,6 +25,7 @@
   </div>
 </template>
 
+<!-- * @description: 图片瀑布流网格 — 自适应行高布局 -->
 <script setup lang="ts">
 import { computed } from "vue";
 import PhotoCard from "./PhotoCard.vue";
@@ -51,7 +52,7 @@ const gridStyle = computed(() => ({
  * 根据照片宽高比计算 row span，创造类似 Apple Photos 的可变高度拼贴效果。
  * 横向照片 span 1，纵向/方正照片 span 2，超宽照片正常 span 1。
  */
-function getRowSpan(photo: PhotoItem): Record<string, string> {
+const getRowSpan = (photo: PhotoItem): Record<string, string> => {
   const ratio = (photo.width && photo.height) ? photo.width / photo.height : 1;
   if (ratio < 0.75) {
     // 纵向照片，占 2 行

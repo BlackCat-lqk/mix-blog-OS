@@ -239,12 +239,12 @@ const handleCloseTip = () => {
   notificationVisible.value = false
 }
 
-function normalizeDuration(d: number | undefined | null): number {
+const normalizeDuration = (d: number | undefined | null): number => {
   const n = Number(d)
   return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0
 }
 
-function formatDuration(sec?: number) {
+const formatDuration = (sec?: number) => {
   if (sec == null || !Number.isFinite(sec)) return ''
   const s = Math.floor(sec)
   const m = Math.floor(s / 60)
@@ -252,7 +252,7 @@ function formatDuration(sec?: number) {
   return `${m}:${r.toString().padStart(2, '0')}`
 }
 
-function normalizeMusicItem(row: MusicItem & { id?: string | number }): MusicItem {
+const normalizeMusicItem = (row: MusicItem & { id?: string | number }): MusicItem => {
   return {
     ...row,
     id: String(row.id ?? ''),
@@ -376,7 +376,7 @@ const runSearchQuery = async () => {
 
 const debouncedSearch = _debounce(runSearchQuery, 420)
 
-function goPrevPage() {
+const goPrevPage = () => {
   handleCancelEdit()
   if (searchMode.value) {
     if (searchPage.value > 1) searchPage.value -= 1

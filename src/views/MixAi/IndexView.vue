@@ -1,6 +1,6 @@
 <!-- * @description: MIX AI 对话页面 -->
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, onUnmounted } from "vue";
 import Orb from "@/views/VueBits/BitsOrb.vue";
 import InputText from "@/components/InputText.vue";
 import ChatList from "./components/ChatList.vue";
@@ -44,6 +44,14 @@ const messages = ref<ChatMessageData[]>([
 let nextId = 2;
 
 // ==================== 方法 ====================
+const isMounted = ref(true);
+let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+onUnmounted(() => {
+  isMounted.value = false;
+  if (timeoutId !== null) clearTimeout(timeoutId);
+});
+
 const getReply = (input: string): string => {
   // 模糊匹配写死数据
   for (const [keyword, reply] of Object.entries(mockReplies)) {
@@ -75,7 +83,11 @@ const handleSend = async (val: string) => {
 
   // 模拟网络延迟 800–1800ms
   const delay = 800 + Math.random() * 1000;
-  await new Promise((r) => setTimeout(r, delay));
+  await new Promise((r) => {
+    timeoutId = setTimeout(r, delay);
+  });
+
+  if (!isMounted.value) return;
 
   typing.value = false;
 

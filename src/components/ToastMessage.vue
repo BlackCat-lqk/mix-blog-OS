@@ -93,24 +93,24 @@ const iconSrc = computed(() => {
 // Timer
 // ============================================================================
 
-function startTimer() {
+const startTimer = () => {
   if (props.duration <= 0) return;
   clearTimer();
   remainingTime = props.duration;
   timer = setTimeout(() => close(), remainingTime);
 }
 
-function clearTimer() {
+const clearTimer = () => {
   if (timer !== null) { clearTimeout(timer); timer = null; }
 }
 
-function onMouseEnter() {
+const onMouseEnter = () => {
   if (props.duration <= 0) return;
   pauseTime = Date.now();
   clearTimer();
 }
 
-function onMouseLeave() {
+const onMouseLeave = () => {
   if (props.duration <= 0) return;
   remainingTime = Math.max(0, remainingTime - (Date.now() - pauseTime));
   if (remainingTime > 0) {
@@ -124,12 +124,12 @@ function onMouseLeave() {
 // Close & destroy
 // ============================================================================
 
-function close() {
+const close = () => {
   clearTimer();
   visible.value = false;
 }
 
-function onAfterLeave() {
+const onAfterLeave = () => {
   emit("destroy");
 }
 
@@ -137,7 +137,7 @@ function onAfterLeave() {
 // GSAP 动画钩子（配合 Transition）
 // ============================================================================
 
-function onEnter(el: Element, done: () => void) {
+const onEnter = (el: Element, done: () => void) => {
   const { x, y } = animOffset.value;
   gsap.fromTo(el,
     { opacity: 0, scale: 0.88, x, y },
@@ -149,7 +149,7 @@ function onEnter(el: Element, done: () => void) {
   );
 }
 
-function onLeave(el: Element, done: () => void) {
+const onLeave = (el: Element, done: () => void) => {
   const { x, y } = animOffset.value;
   // 退场方向取反向偏移的 40%，更快更轻
   gsap.to(el, {

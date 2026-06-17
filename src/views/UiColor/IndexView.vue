@@ -1,3 +1,4 @@
+<!-- * @description: UI 取色器 — 示例色板、图片取色、自定义颜色编辑 -->
 <script lang="ts" setup>
 import { ref } from "vue";
 import colorshapes from "@/assets/uiColors/icons/colorshapes.svg";
@@ -23,6 +24,7 @@ const optionBtn = [
   },
 ];
 
+// hoisted constants (module-level via <script setup> compilation)
 const activeOption = ref(0);
 </script>
 

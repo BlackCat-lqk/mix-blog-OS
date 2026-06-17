@@ -1,3 +1,4 @@
+<!-- * @description: 格式转换面板 — 目标格式、质量、尺寸设置 -->
 <script setup lang="ts">
 import { computed } from "vue";
 import { OUTPUT_FORMATS, type OutputFormat } from "@/utils/imageConvert";
@@ -23,7 +24,7 @@ const currentFormatInfo = computed(() =>
 
 const canConvert = computed(() => props.fileCount > 0 && !props.converting);
 
-function onFormatChange(e: Event) {
+const onFormatChange = (e: Event) => {
   const val = (e.target as HTMLSelectElement).value as OutputFormat;
   emit("update:format", val);
 }

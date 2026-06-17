@@ -1,3 +1,4 @@
+<!-- * @description: 文件预览器 — 基于 @open-file-viewer 的多格式文件预览组件 -->
 <script lang="ts" setup>
 import { OpenFileViewer } from "@open-file-viewer/vue";
 import {

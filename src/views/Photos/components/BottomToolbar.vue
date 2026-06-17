@@ -64,8 +64,18 @@
   </div>
 </template>
 
+<!-- * @description: 底部工具栏 — 列数调节、缩放控制 -->
 <script setup lang="ts">
 import type { ToolbarTab } from "./types";
+
+const minColumns = 2;
+const maxColumns = 8;
+
+const tabs: { key: ToolbarTab; label: string }[] = [
+  { key: "gallery", label: "图库" },
+  { key: "albums", label: "相册" },
+  { key: "search", label: "搜索" },
+];
 
 const props = defineProps<{
   activeTab: ToolbarTab;
@@ -78,22 +88,13 @@ const emit = defineEmits<{
   "enterSelection": [];
 }>();
 
-const minColumns = 2;
-const maxColumns = 8;
-
-const tabs: { key: ToolbarTab; label: string }[] = [
-  { key: "gallery", label: "图库" },
-  { key: "albums", label: "相册" },
-  { key: "search", label: "搜索" },
-];
-
-function increaseColumns() {
+const increaseColumns = () => {
   if (props.columnCount < maxColumns) {
     emit("update:columnCount", props.columnCount + 1);
   }
 }
 
-function decreaseColumns() {
+const decreaseColumns = () => {
   if (props.columnCount > minColumns) {
     emit("update:columnCount", props.columnCount - 1);
   }

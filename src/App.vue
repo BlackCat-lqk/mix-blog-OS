@@ -1,3 +1,4 @@
+<!-- * @description: 根组件 — 桌面、应用窗口管理、任务栏 -->
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { Message } from "@/utils/message";
@@ -73,12 +74,9 @@ const handleMinimize = (app: AppItem) => {
   const dockEl = document.querySelector(`[data-app-dock="${app.enName}"]`);
   if (dockEl) {
     const rect = dockEl.getBoundingClientRect();
-    minimizeTarget.value = {
-      ...minimizeTarget.value,
-      [app.enName]: {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-      },
+    minimizeTarget.value[app.enName] = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
     };
   }
   minimizeWindow.value.push(app.enName);
@@ -125,7 +123,7 @@ watch(
       @close="handleCloseApp(app)"
       @click="clickWindow(app)"
       @mousedown="clickWindow(app)"
-      :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
+      :style="{ zIndex: focusWindow === app.enName ? 999 : undefined }"
       :minimized="minimizeWindow.includes(app.enName)"
       :minimize-target="minimizeTarget[app.enName]"
     >

@@ -84,6 +84,7 @@
   </Teleport>
 </template>
 
+<!-- * @description: 全屏图片查看器 — 前后导航、键盘/触屏手势、收藏、删除 -->
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount } from "vue";
 import type { PhotoItem } from "./types";
@@ -107,32 +108,32 @@ const currentPhoto = computed(() => {
   return props.photos[props.currentIndex] ?? null;
 });
 
-function close() {
+const close = () => {
   emit("close");
 }
 
-function prev() {
+const prev = () => {
   if (total.value <= 1) return;
   const newIdx = props.currentIndex > 0 ? props.currentIndex - 1 : total.value - 1;
   emit("navigate", newIdx);
 }
 
-function next() {
+const next = () => {
   if (total.value <= 1) return;
   const newIdx = props.currentIndex < total.value - 1 ? props.currentIndex + 1 : 0;
   emit("navigate", newIdx);
 }
 
-function toggleFavorite() {
+const toggleFavorite = () => {
   emit("toggleFavorite", props.currentIndex);
 }
 
-function deletePhoto() {
+const deletePhoto = () => {
   emit("deletePhoto", props.currentIndex);
 }
 
 // --- 键盘支持 ---
-function onKeydown(e: KeyboardEvent) {
+const onKeydown = (e: KeyboardEvent) => {
   if (!props.visible) return;
   switch (e.key) {
     case "Escape":
@@ -161,11 +162,11 @@ onBeforeUnmount(() => {
 // --- 触摸滑动 ---
 let touchStartX = 0;
 
-function onTouchStart(e: TouchEvent) {
+const onTouchStart = (e: TouchEvent) => {
   touchStartX = e.touches[0].clientX;
 }
 
-function onTouchEnd(e: TouchEvent) {
+const onTouchEnd = (e: TouchEvent) => {
   const delta = e.changedTouches[0].clientX - touchStartX;
   if (Math.abs(delta) > 50) {
     if (delta < 0) {
@@ -177,7 +178,7 @@ function onTouchEnd(e: TouchEvent) {
 }
 
 // --- 滚轮缩放（预留，当前仅阻止默认） ---
-function handleWheel(_e: WheelEvent) {
+const handleWheel = (_e: WheelEvent) => {
   // 预留：后续可实现滚轮缩放
 }
 </script>
