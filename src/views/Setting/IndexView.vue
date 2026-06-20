@@ -1,3 +1,4 @@
+<!-- * @description: 系统设置 — 个性化壁纸、用户登录、侧边栏导航 -->
 <script lang="ts" setup>
 import { ref, computed } from "vue";
 import SideMenu from "@/components/SidebarMenu.vue";

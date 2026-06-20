@@ -80,6 +80,9 @@ const canSend = computed(() => {
 });
 
 // ---- 自适应高度 ----
+// Cached computed styles — line-height/padding don't change between resizes
+let cachedAutoResizeStyles: { lineHeight: number; paddingTop: number; paddingBottom: number } | null = null;
+
 const autoResize = () => {
   const el = textareaRef.value;
   if (!el) return;
@@ -87,10 +90,15 @@ const autoResize = () => {
   // 先重置高度以获取正确的 scrollHeight
   el.style.height = "auto";
 
-  const computedStyle = getComputedStyle(el);
-  const lineHeight = parseFloat(computedStyle.lineHeight) || 20;
-  const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
-  const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+  if (!cachedAutoResizeStyles) {
+    const computedStyle = getComputedStyle(el);
+    cachedAutoResizeStyles = {
+      lineHeight: parseFloat(computedStyle.lineHeight) || 20,
+      paddingTop: parseFloat(computedStyle.paddingTop) || 0,
+      paddingBottom: parseFloat(computedStyle.paddingBottom) || 0,
+    };
+  }
+  const { lineHeight, paddingTop, paddingBottom } = cachedAutoResizeStyles;
   const minH = lineHeight * props.minRows + paddingTop + paddingBottom;
   const maxH = lineHeight * props.maxRows + paddingTop + paddingBottom;
 

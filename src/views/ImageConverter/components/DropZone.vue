@@ -1,3 +1,4 @@
+<!-- * @description: 拖拽上传区域 — 支持点击选择与拖拽文件 -->
 <script setup lang="ts">
 import { ref } from "vue";
 
@@ -10,18 +11,18 @@ const inputRef = ref<HTMLInputElement | null>(null);
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml,image/avif,image/tiff,image/x-icon,image/vnd.microsoft.icon";
 
-function onDragEnter(e: DragEvent) {
+const onDragEnter = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = true;
 }
-function onDragOver(e: DragEvent) {
+const onDragOver = (e: DragEvent) => {
   e.preventDefault();
 }
-function onDragLeave(e: DragEvent) {
+const onDragLeave = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = false;
 }
-function onDrop(e: DragEvent) {
+const onDrop = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = false;
   if (e.dataTransfer?.files) {
@@ -29,13 +30,13 @@ function onDrop(e: DragEvent) {
   }
 }
 
-function onInputChange() {
+const onInputChange = () => {
   if (inputRef.value?.files) {
     handleFiles(Array.from(inputRef.value.files));
   }
 }
 
-function handleFiles(files: File[]) {
+const handleFiles = (files: File[]) => {
   const imageFiles = files.filter((f) => f.type.startsWith("image/") || f.name.match(/\.(svg|ico|tiff?)$/i));
   if (imageFiles.length === 0) return;
   emit("files", imageFiles);
@@ -43,7 +44,7 @@ function handleFiles(files: File[]) {
   if (inputRef.value) inputRef.value.value = "";
 }
 
-function onClick() {
+const onClick = () => {
   inputRef.value?.click();
 }
 </script>

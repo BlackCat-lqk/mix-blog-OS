@@ -1,3 +1,4 @@
+<!-- * @description: 根组件 — 桌面、应用窗口管理、任务栏 -->
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { Message } from "@/utils/message";
@@ -9,6 +10,9 @@ import UiColor from "@/views/UiColor/IndexView.vue";
 import ImageConverter from "@/views/ImageConverter/IndexView.vue";
 import MixAi from "@/views/MixAi/IndexView.vue";
 import SiteNav from "@/views/SiteNav/SiteNav.vue";
+import FilePreview from "@/views/FilePreview/IndexView.vue";
+import Photos from "@/views/Photos/IndexView.vue";
+import ToolTip from "@/components/ToolTip.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
@@ -71,12 +75,9 @@ const handleMinimize = (app: AppItem) => {
   const dockEl = document.querySelector(`[data-app-dock="${app.enName}"]`);
   if (dockEl) {
     const rect = dockEl.getBoundingClientRect();
-    minimizeTarget.value = {
-      ...minimizeTarget.value,
-      [app.enName]: {
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
-      },
+    minimizeTarget.value[app.enName] = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
     };
   }
   minimizeWindow.value.push(app.enName);
@@ -123,7 +124,7 @@ watch(
       @close="handleCloseApp(app)"
       @click="clickWindow(app)"
       @mousedown="clickWindow(app)"
-      :style="focusWindow === app.enName ? 'z-index: 999;' : 'z-index: unset;'"
+      :style="{ zIndex: focusWindow === app.enName ? 999 : undefined }"
       :minimized="minimizeWindow.includes(app.enName)"
       :minimize-target="minimizeTarget[app.enName]"
     >
@@ -132,6 +133,8 @@ watch(
       <UiColor v-else-if="app.enName === 'uiColor'" />
       <ImageConverter v-else-if="app.enName === 'imageConverter'"></ImageConverter>
       <MixAi v-else-if="app.enName === 'MIXAI'"></MixAi>
+      <FilePreview v-else-if="app.enName === 'filePreview'"></FilePreview>
+      <Photos v-else-if="app.enName === 'Photos'" />
       <SiteNav v-else-if="app.enName === 'siteNav'"></SiteNav>
     </OsWindow>
 

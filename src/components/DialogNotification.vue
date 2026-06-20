@@ -1,3 +1,4 @@
+<!-- * @description: 弹窗通知组件 — 模态对话框，支持标题、内容插槽、关闭回调 -->
 <template>
   <div
     style="z-index: 999"

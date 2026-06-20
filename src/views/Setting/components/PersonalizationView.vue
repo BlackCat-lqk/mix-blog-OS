@@ -1,5 +1,6 @@
+<!-- * @description: 个性化设置 — 壁纸上传与预览 -->
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, onUnmounted } from "vue";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
 import defaultWallpaper2 from "@/assets/setting/images/wallpaper/default-wallpaper2.png";
@@ -7,6 +8,14 @@ import defaultWallpaper3 from "@/assets/setting/images/wallpaper/default-wallpap
 
 const store = useWallpaperStore();
 const fileInput = ref<HTMLInputElement>();
+
+const isMounted = ref(true);
+let activeReader: FileReader | null = null;
+
+onUnmounted(() => {
+  isMounted.value = false;
+  activeReader?.abort();
+});
 
 const triggerUpload = () => {
   fileInput.value?.click();
@@ -17,9 +26,18 @@ const onFileChange = (e: Event) => {
   const file = input.files?.[0];
   if (!file) return;
 
+  // Abort any previous in-progress read
+  activeReader?.abort();
+
   const reader = new FileReader();
+  activeReader = reader;
+
   reader.onload = () => {
+    if (!isMounted.value) return;
     store.setWallpaper(reader.result as string);
+  };
+  reader.onerror = () => {
+    activeReader = null;
   };
   reader.readAsDataURL(file);
   input.value = "";

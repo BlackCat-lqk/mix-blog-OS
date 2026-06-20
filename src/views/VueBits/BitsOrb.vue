@@ -1,3 +1,4 @@
+<!-- * @description: WebGL 光晕球体 — 可交互的 3D 着色器效果组件 -->
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch, useTemplateRef } from 'vue';
 import { Renderer, Program, Mesh, Triangle, Vec3 } from 'ogl';
@@ -206,7 +207,7 @@ const setupAnimation = () => {
 
   const mesh = new Mesh(gl, { geometry, program });
 
-  function resize() {
+  const resize = () => {
     if (!container) return;
     const dpr = window.devicePixelRatio || 1;
     const width = container.clientWidth;

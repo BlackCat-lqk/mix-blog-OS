@@ -5,10 +5,8 @@ defineProps<{ menuList: { name: string; icon: string }[] }>();
 const emit = defineEmits(["clickMenu"]);
 // 聚焦菜单项
 const focusMenuIdx = ref(0);
-const focusMenuItem = ref("");
 // 菜单点击事件
 const handleMenu = (menu: { name: string; icon: string }, index: number) => {
-  focusMenuItem.value = menu.name;
   focusMenuIdx.value = index;
   emit("clickMenu", menu, index);
 };

@@ -1,4 +1,18 @@
 /* * os-window * @description: 窗口组件 */
+
+<!-- ====== 模块级状态：所有 OsWindow 实例共享 ====== -->
+<script lang="ts">
+let cascadeIndex = 0;
+const CASCADE_OFFSET = 30;
+const CASCADE_MAX = 10; // 超过 10 个窗口后回到初始位置
+
+export function getCascadeOffset(): number {
+  const offset = (cascadeIndex % CASCADE_MAX) * CASCADE_OFFSET;
+  cascadeIndex++;
+  return offset;
+}
+</script>
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, provide, reactive, nextTick } from "vue";
 import type { VNode, Component } from "vue";
@@ -339,8 +353,10 @@ const onMouseUp = () => {
 };
 
 onMounted(() => {
-  left.value = Math.max(0, (window.innerWidth - width.value) / 2);
-  top.value = Math.max(0, (window.innerHeight - height.value) / 2);
+  // 级联偏移：每个新窗口相对上一个向右下错开，避免完全重叠
+  const offset = getCascadeOffset();
+  left.value = clampLeft(Math.max(0, (window.innerWidth - width.value) / 2) + offset);
+  top.value = clampTop(Math.max(0, (window.innerHeight - height.value) / 2) + offset);
   savedRect.value = { left: left.value, top: top.value, width: width.value, height: height.value };
 
   document.addEventListener("mousemove", onMouseMove);

@@ -1,3 +1,4 @@
+<!-- * @description: Favicon 制作器 — 从图片生成多尺寸图标与 .ico 文件 -->
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from "vue";
 import {
@@ -55,14 +56,14 @@ const checkedSizes = computed(() =>
 );
 
 // ---- 上传 ----
-function onInputChange() {
+const onInputChange = () => {
   const files = inputRef.value?.files;
   if (files && files.length > 0) {
     setFile(files[0]);
   }
 }
 
-function setFile(file: File) {
+const setFile = (file: File) => {
   // 清理旧文件
   clearResults();
   if (uploaded.value) {
@@ -75,7 +76,7 @@ function setFile(file: File) {
   };
 }
 
-function onDrop(e: DragEvent) {
+const onDrop = (e: DragEvent) => {
   e.preventDefault();
   isDragOver.value = false;
   const file = e.dataTransfer?.files?.[0];
@@ -86,12 +87,12 @@ function onDrop(e: DragEvent) {
 }
 
 const isDragOver = ref(false);
-function onDragEnter(e: DragEvent) { e.preventDefault(); isDragOver.value = true; }
-function onDragOver(e: DragEvent) { e.preventDefault(); }
-function onDragLeave(e: DragEvent) { e.preventDefault(); isDragOver.value = false; }
+const onDragEnter = (e: DragEvent) => { e.preventDefault(); isDragOver.value = true; }
+const onDragOver = (e: DragEvent) => { e.preventDefault(); }
+const onDragLeave = (e: DragEvent) => { e.preventDefault(); isDragOver.value = false; }
 
 // ---- 尺寸选择 ----
-function toggleSize(size: FavSize) {
+const toggleSize = (size: FavSize) => {
   const next = new Set(selectedSizes.value);
   if (next.has(size)) {
     if (next.size > 1) next.delete(size); // 至少保留一个
@@ -101,12 +102,12 @@ function toggleSize(size: FavSize) {
   selectedSizes.value = next;
 }
 
-function selectAll() {
+const selectAll = () => {
   selectedSizes.value = new Set(ALL_SIZES);
 }
 
 // ---- 生成 Favicon ----
-async function doGenerate() {
+const doGenerate = async () => {
   if (!uploaded.value || generating.value) return;
   generating.value = true;
   clearResults();
@@ -142,18 +143,18 @@ async function doGenerate() {
 }
 
 // ---- 下载 ----
-function downloadOne(item: ResultItem) {
+const downloadOne = (item: ResultItem) => {
   downloadBlob(item.pngBlob, `favicon-${item.size}x${item.size}.png`);
 }
 
-function downloadMultiIco() {
+const downloadMultiIco = () => {
   if (multiIcoBlob.value) {
     downloadBlob(multiIcoBlob.value, "favicon.ico");
   }
 }
 
 // ---- 清空 ----
-function clearAll() {
+const clearAll = () => {
   clearResults();
   if (uploaded.value) {
     URL.revokeObjectURL(uploaded.value.previewUrl);
@@ -163,7 +164,7 @@ function clearAll() {
   if (inputRef.value) inputRef.value.value = "";
 }
 
-function clearResults() {
+const clearResults = () => {
   for (const item of results.value) {
     URL.revokeObjectURL(item.previewUrl);
   }

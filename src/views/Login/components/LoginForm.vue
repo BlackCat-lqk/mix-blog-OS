@@ -42,7 +42,7 @@ const passwordError = ref("");
 const MIN_ACCOUNT_LEN = 2;
 const MIN_PASSWORD_LEN = 4;
 
-function validate(): boolean {
+const validate = (): boolean => {
   accountError.value = "";
   passwordError.value = "";
   serverError.value = "";
@@ -69,7 +69,7 @@ function validate(): boolean {
 }
 
 // ---- 表单提交 ----
-async function handleSubmit() {
+const handleSubmit = async () => {
   if (!validate()) return;
 
   loading.value = true;
@@ -100,7 +100,7 @@ async function handleSubmit() {
 }
 
 // ---- 键盘事件 ----
-function onKeydown(e: KeyboardEvent) {
+const onKeydown = (e: KeyboardEvent) => {
   if (e.key === "Enter" && !loading.value) {
     e.preventDefault();
     handleSubmit();
