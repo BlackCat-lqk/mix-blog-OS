@@ -3,6 +3,7 @@ import music from "@/assets/icons/app/music.svg";
 import uiColors from "@/assets/icons/app/uiColors.svg";
 import photoConvert from "@/assets/icons/app/photoConvert.svg";
 import AIChat from "@/assets/icons/app/AIChat.svg";
+import siteNav from "@/assets/icons/app/siteNav.svg";
 
 const appConfig = [
   {
@@ -29,6 +30,11 @@ const appConfig = [
     zhName: "MIX AI",
     enName: "MIXAI",
     icon: AIChat,
+  },
+  {
+    zhName: "站点导航",
+    enName: "siteNav",
+    icon: siteNav,
   },
 ];
 

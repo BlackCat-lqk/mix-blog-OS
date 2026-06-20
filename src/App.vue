@@ -8,6 +8,7 @@ import IMusic from "@/views/IMusic/IndexView.vue";
 import UiColor from "@/views/UiColor/IndexView.vue";
 import ImageConverter from "@/views/ImageConverter/IndexView.vue";
 import MixAi from "@/views/MixAi/IndexView.vue";
+import SiteNav from "@/views/SiteNav/SiteNav.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
@@ -131,6 +132,7 @@ watch(
       <UiColor v-else-if="app.enName === 'uiColor'" />
       <ImageConverter v-else-if="app.enName === 'imageConverter'"></ImageConverter>
       <MixAi v-else-if="app.enName === 'MIXAI'"></MixAi>
+      <SiteNav v-else-if="app.enName === 'siteNav'"></SiteNav>
     </OsWindow>
 
     <!-- 底部任务栏 -->
