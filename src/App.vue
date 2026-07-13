@@ -14,7 +14,7 @@ import Photos from "@/views/Photos/IndexView.vue";
 import ToolTip from "@/components/ToolTip.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
-import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
+import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
 
 const store = useWallpaperStore();
 

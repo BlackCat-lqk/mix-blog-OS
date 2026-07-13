@@ -23,12 +23,7 @@ withDefaults(
     <div class="login-card__brand">
       <!-- Logo：抽象 OS 图标 -->
       <div class="login-card__logo" aria-hidden="true">
-        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2" y="2" width="36" height="36" rx="10" stroke="currentColor" stroke-width="1.5" />
-          <circle cx="14" cy="14" r="3.5" fill="currentColor" />
-          <circle cx="26" cy="14" r="3.5" fill="currentColor" />
-          <rect x="13" y="23" width="14" height="8" rx="3" fill="currentColor" />
-        </svg>
+        <img src="" alt="" />
       </div>
       <h1 class="login-card__title">{{ title }}</h1>
       <p class="login-card__subtitle">{{ subtitle }}</p>
@@ -48,7 +43,9 @@ withDefaults(
 // ---- tokens ----
 $card-bg: rgba(255, 255, 255, 0.07);
 $card-border: rgba(255, 255, 255, 0.1);
-$card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 24px rgba(0, 0, 0, 0.3),
+$card-shadow:
+  0 0 0 1px rgba(255, 255, 255, 0.05),
+  0 4px 24px rgba(0, 0, 0, 0.3),
   0 0 80px rgba(0, 103, 192, 0.08);
 $text-primary: #f1f5f9;
 $text-secondary: #94a3b8;

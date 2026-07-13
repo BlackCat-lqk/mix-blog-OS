@@ -20,10 +20,6 @@ onMounted(() => {
 
 <template>
   <div class="login-page">
-    <!-- 装饰性背景光晕 -->
-    <div class="login-page__glow login-page__glow--1" aria-hidden="true"></div>
-    <div class="login-page__glow login-page__glow--2" aria-hidden="true"></div>
-
     <!-- 卡片区域 -->
     <div class="login-page__center">
       <Transition name="card">
@@ -32,11 +28,6 @@ onMounted(() => {
         </LoginCard>
       </Transition>
     </div>
-
-    <!-- 底部品牌信息 -->
-    <footer class="login-page__footer">
-      <span>© 2024 MIX OS · 登录页</span>
-    </footer>
   </div>
 </template>
 

@@ -3,7 +3,6 @@
 import { ref, computed } from "vue";
 import SideMenu from "@/components/SidebarMenu.vue";
 import personalizationIcon from "@/assets/setting/icons/personalization.svg";
-import accountIcon from "@/assets/setting/icons/account.svg";
 import PersonalizationView from "./components/PersonalizationView.vue";
 import LoginCard from "@/views/Login/components/LoginCard.vue";
 import LoginForm from "@/views/Login/components/LoginForm.vue";
@@ -58,8 +57,15 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
   <div class="index__view">
     <div class="index__view--menu">
       <!-- 帐号区域：点击弹出登录 -->
-      <div class="index__view--account" @click="openLoginModal" role="button" tabindex="0" aria-label="打开登录窗口"
-        @keydown.enter="openLoginModal" @keydown.space.prevent="openLoginModal">
+      <div
+        class="index__view--account"
+        @click="openLoginModal"
+        role="button"
+        tabindex="0"
+        aria-label="打开登录窗口"
+        @keydown.enter="openLoginModal"
+        @keydown.space.prevent="openLoginModal"
+      >
         <div class="index__view--avatar">
           <span class="index__view--avatar-text">{{ avatarLetter }}</span>
         </div>
@@ -67,25 +73,46 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
       </div>
       <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
     </div>
-    <OverlayScrollbarsComponent defer style="flex: 1" :options="{
-      scrollbars: {
-        autoHide: 'move',
-        autoHideDelay: 100,
-      },
-    }">
-      <div class="index__view--content">
+
+    <div class="index__view--content">
+      <OverlayScrollbarsComponent
+        defer
+        style="flex: 1"
+        :options="{
+          scrollbars: {
+            autoHide: 'move',
+            autoHideDelay: 100,
+          },
+        }"
+      >
         <PersonalizationView v-show="focusMenuIdx == 0"></PersonalizationView>
-      </div>
-    </OverlayScrollbarsComponent>
+      </OverlayScrollbarsComponent>
+    </div>
 
     <!-- 登录弹窗 -->
     <Teleport to="body">
       <Transition name="login-modal">
-        <div v-if="showLoginModal" class="login-modal__overlay" @click.self="closeLoginModal" @keydown.escape="closeLoginModal">
+        <div
+          v-if="showLoginModal"
+          class="login-modal__overlay"
+          @click.self="closeLoginModal"
+          @keydown.escape="closeLoginModal"
+        >
           <div class="login-modal__card-wrapper">
             <!-- 关闭按钮 -->
-            <button class="login-modal__close" @click="closeLoginModal" type="button" aria-label="关闭登录窗口">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <button
+              class="login-modal__close"
+              @click="closeLoginModal"
+              type="button"
+              aria-label="关闭登录窗口"
+            >
+              <svg
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              >
                 <line x1="4" y1="4" x2="12" y2="12" />
                 <line x1="12" y1="4" x2="4" y2="12" />
               </svg>
@@ -106,7 +133,7 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
   display: flex;
   height: 100%;
   gap: 20px;
-  padding: 0px 2px 10px 10px;
+  padding-left: 10px;
 
   &--menu {
     width: 200px;
@@ -167,10 +194,11 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
 
   &--content {
     flex: 1;
+    height: calc(100% - 20px);
     display: flex;
     justify-content: center;
     overflow: auto;
-    padding: 0 10px;
+    padding: 10px;
   }
 }
 
@@ -279,7 +307,6 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
 
 // ---- reduced-motion ----
 @media (prefers-reduced-motion: reduce) {
-
   .login-modal-enter-active,
   .login-modal-leave-active {
     transition: none !important;

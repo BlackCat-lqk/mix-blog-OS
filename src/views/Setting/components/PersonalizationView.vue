@@ -2,9 +2,13 @@
 <script lang="ts" setup>
 import { ref, onUnmounted } from "vue";
 import { useWallpaperStore } from "@/stores/wallpaper";
-import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.png";
+import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
 import defaultWallpaper2 from "@/assets/setting/images/wallpaper/default-wallpaper2.png";
 import defaultWallpaper3 from "@/assets/setting/images/wallpaper/default-wallpaper3.png";
+import defaultWallpaper4 from "@/assets/setting/images/wallpaper/default-wallpaper4.png";
+import defaultWallpaper5 from "@/assets/setting/images/wallpaper/default-wallpaper5.jpg";
+import defaultWallpaper6 from "@/assets/setting/images/wallpaper/default-wallpaper6.jpg";
+import defaultWallpaper7 from "@/assets/setting/images/wallpaper/default-wallpaper7.jpg";
 
 const store = useWallpaperStore();
 const fileInput = ref<HTMLInputElement>();
@@ -70,6 +74,18 @@ const onFileChange = (e: Event) => {
         <div class="item" @click="store.selectWallpaper(defaultWallpaper3)">
           <img :src="defaultWallpaper3" alt="item" />
         </div>
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper4)">
+          <img :src="defaultWallpaper4" alt="item" />
+        </div>
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper5)">
+          <img :src="defaultWallpaper5" alt="item" />
+        </div>
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper6)">
+          <img :src="defaultWallpaper6" alt="item" />
+        </div>
+        <div class="item" @click="store.selectWallpaper(defaultWallpaper7)">
+          <img :src="defaultWallpaper7" alt="item" />
+        </div>
       </div>
     </div>
     <div class="index-personalozation--history">
@@ -94,6 +110,12 @@ const onFileChange = (e: Event) => {
       <span>选择一张照片</span>
       <button class="preview-btn" @click="triggerUpload">浏览照片</button>
       <input ref="fileInput" type="file" accept="image/*" @change="onFileChange" hidden />
+    </div>
+    <!-- 选择主题 -->
+    <div>
+      <span>选择主题</span>
+      <button>浅色</button>
+      <button>深色</button>
     </div>
   </div>
 </template>
