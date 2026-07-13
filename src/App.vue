@@ -9,6 +9,7 @@ import IMusic from "@/views/IMusic/IndexView.vue";
 import UiColor from "@/views/UiColor/IndexView.vue";
 import ImageConverter from "@/views/ImageConverter/IndexView.vue";
 import MixAi from "@/views/MixAi/IndexView.vue";
+import SiteNav from "@/views/SiteNav/SiteNav.vue";
 import FilePreview from "@/views/FilePreview/IndexView.vue";
 import Photos from "@/views/Photos/IndexView.vue";
 import ToolTip from "@/components/ToolTip.vue";
@@ -134,6 +135,7 @@ watch(
       <MixAi v-else-if="app.enName === 'MIXAI'"></MixAi>
       <FilePreview v-else-if="app.enName === 'filePreview'"></FilePreview>
       <Photos v-else-if="app.enName === 'Photos'" />
+      <SiteNav v-else-if="app.enName === 'siteNav'"></SiteNav>
     </OsWindow>
 
     <!-- 底部任务栏 -->

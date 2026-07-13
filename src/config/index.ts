@@ -5,6 +5,7 @@ import photoConvert from "@/assets/icons/app/photoConvert.svg";
 import AIChat from "@/assets/icons/app/AIChat.svg";
 import filePreview from "@/assets/icons/app/filePreview.png";
 import Photo from "@/assets/icons/app/Photo.svg";
+import siteNav from "@/assets/icons/app/siteNav.svg";
 
 const appConfig = [
   {
@@ -41,6 +42,11 @@ const appConfig = [
     zhName: "图库",
     enName: "Photos",
     icon: Photo,
+  },
+  {
+    zhName: "站点导航",
+    enName: "siteNav",
+    icon: siteNav,
   },
 ];
 
