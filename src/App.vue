@@ -1,7 +1,6 @@
 <!-- * @description: 根组件 — 桌面、应用窗口管理、任务栏 -->
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { Message } from "@/utils/message";
 import appConfig from "@/config/index";
 import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
@@ -12,7 +11,6 @@ import MixAi from "@/views/MixAi/IndexView.vue";
 import SiteNav from "@/views/SiteNav/SiteNav.vue";
 import FilePreview from "@/views/FilePreview/IndexView.vue";
 import Photos from "@/views/Photos/IndexView.vue";
-import ToolTip from "@/components/ToolTip.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
@@ -82,9 +80,6 @@ const handleMinimize = (app: AppItem) => {
   }
   minimizeWindow.value.push(app.enName);
 };
-const handelTest = () => {
-  Message.warning("成功点击", { position: "top-right", duration: 3000 });
-};
 watch(
   () => store.initialized,
   (ready) => {
@@ -141,9 +136,7 @@ watch(
     <!-- 底部任务栏 -->
     <div class="taskbar">
       <div class="taskbar__left">
-        <ToolTip content="提示文字" position="top" theme="dark">
-          <span class="taskbar__start" @click="handelTest">MIX OS</span>
-        </ToolTip>
+        <img src="@/assets/icons/logo-dark.svg" />
       </div>
       <div class="taskbar__center">
         <button
@@ -215,8 +208,8 @@ $gap: 20px;
   will-change: transform;
   cursor: pointer;
   img {
-    width: 46px;
-    height: 46px;
+    width: 36px;
+    height: 36px;
     pointer-events: none;
   }
 
@@ -253,6 +246,12 @@ $gap: 20px;
   &__left {
     width: 160px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    img {
+      height: 100%;
+    }
   }
 
   &__center {
@@ -267,12 +266,6 @@ $gap: 20px;
     text-align: right;
     flex-shrink: 0;
   }
-}
-
-.taskbar__start {
-  color: $primary;
-  font-size: 13px;
-  font-weight: 600;
 }
 
 .taskbar__item {
