@@ -1,19 +1,19 @@
-import request from '@/utils/request'
+import request from "@/utils/request";
 interface MusicItem {
-  id?: number | string
-  title: string
-  artist?: string
-  audioUrl?: string
-  duration?: number
-  coverUrl?: string
-  lyricsUrl?: string
+  id?: number | string;
+  title: string;
+  artist?: string;
+  audioUrl?: string;
+  duration?: number;
+  coverUrl?: string;
+  lyricsUrl?: string;
 }
 /**
  * 登录
  * @returns {Promise}
  */
 export function loginUserApi(params: object) {
-  return request.post('/user/login', params)
+  return request.post("/login", params);
 }
 
 /**
@@ -21,11 +21,11 @@ export function loginUserApi(params: object) {
  * @returns {Promise}
  */
 export function addToFavoritesApi(params: {
-  userId: string
-  musicInfo: MusicItem
-  playlistTitle: string
+  userId: string;
+  musicInfo: MusicItem;
+  playlistTitle: string;
 }) {
-  return request.post(`/user/${params.userId}/favorites`, params)
+  return request.post(`/user/${params.userId}/favorites`, params);
 }
 
 /**
@@ -33,15 +33,15 @@ export function addToFavoritesApi(params: {
  * @returns {Promise}
  */
 export function removeFavoritesApi(params: {
-  userId: string
-  musicInfo: MusicItem
-  playlistTitle: string
+  userId: string;
+  musicInfo: MusicItem;
+  playlistTitle: string;
 }) {
   return request.delete(`/user/${params.userId}/favorites/${params.musicInfo.id}`, {
     data: {
       playlistTitle: params.playlistTitle,
     },
-  })
+  });
 }
 
 /**
@@ -49,11 +49,11 @@ export function removeFavoritesApi(params: {
  * @returns {Promise}
  */
 export function addToLikesApi(params: {
-  userId: string
-  musicInfo: MusicItem
-  playlistTitle: string
+  userId: string;
+  musicInfo: MusicItem;
+  playlistTitle: string;
 }) {
-  return request.post(`/user/${params.userId}/likes`, params)
+  return request.post(`/user/${params.userId}/likes`, params);
 }
 
 /**
@@ -61,15 +61,15 @@ export function addToLikesApi(params: {
  * @returns {Promise}
  */
 export function removeLikesApi(params: {
-  userId: string
-  musicInfo: MusicItem
-  playlistTitle: string
+  userId: string;
+  musicInfo: MusicItem;
+  playlistTitle: string;
 }) {
   return request.delete(`/user/${params.userId}/likes/${params.musicInfo.id}`, {
     data: {
       playlistTitle: params.playlistTitle,
     },
-  })
+  });
 }
 
 /**
@@ -77,7 +77,7 @@ export function removeLikesApi(params: {
  * @returns {Promise}
  */
 export function queryLikesFavoriteApi(params: { userId: string }) {
-  return request.get(`/user/${params.userId}/collections`)
+  return request.get(`/user/${params.userId}/collections`);
 }
 
 /**
@@ -85,5 +85,5 @@ export function queryLikesFavoriteApi(params: { userId: string }) {
  * @returns {Promise}
  */
 export function queryLikeApi(params: { userId: string; musicId: string; playlistTitle?: string }) {
-  return request.get(`/user/${params.userId}/likes/check/${params.musicId}`)
+  return request.get(`/user/${params.userId}/likes/check/${params.musicId}`);
 }

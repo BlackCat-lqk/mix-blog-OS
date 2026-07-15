@@ -1,6 +1,6 @@
 {
-  "name": "mix-blog-os",
-  "version": "0.0.0",
+  "name": "mix-os",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,6 +26,7 @@
     "overlayscrollbars-vue": "^0.5.10",
     "pdfjs-dist": "^5.7.284",
     "pinia": "^3.0.4",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.32",
     "vue-router": "^5.0.4"
   },

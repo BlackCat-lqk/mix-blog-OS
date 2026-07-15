@@ -1,7 +1,8 @@
 import axios from "axios";
+import { Message } from "@/utils/message";
 
 const service = axios.create({
-  baseURL: "/",
+  baseURL: "/api",
   timeout: 10000 * 60, // 请求超时时间（10分钟）
 });
 
@@ -26,10 +27,10 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response) => {
     const res = response.data;
-    if (res.code === 200) {
+    if (res.data.code === 200) {
       return res;
     } else {
-      console.log(res.data.message || "未知错误");
+      Message.error(res.data.message || "未知错误");
       return Promise.reject(new Error(res.data.message || "Unknown error"));
     }
   },
@@ -39,7 +40,6 @@ service.interceptors.response.use(
       | undefined;
     const msg =
       payload?.data?.message ?? payload?.message ?? error.message ?? "网络异常，请稍后再试";
-    console.log("网络异常，请稍后再试", msg);
     return Promise.reject(new Error(msg));
   },
 );

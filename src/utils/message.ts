@@ -9,7 +9,7 @@
  *   Message.warning("请检查输入");
  *
  *   // 带配置
- *   Message.success("已保存", { duration: 5000, position: "top-right" });
+ *   Message.success("已保存", { duration: 5000, position: "top-right", maxToasts: 5 }); // maxToasts = 5 最大通知5条
  *   Message.error("失败",     { duration: 0,    position: "bottom" });   // duration=0 不自动关闭
  *
  * 位置（8 个）：
@@ -29,14 +29,13 @@ export interface MessageOptions {
   duration?: number;
   /** 弹出位置，默认 "top" */
   position?: ToastPosition;
+  /** 但容器最大通知数 */
+  maxToasts?: number;
 }
 
 // ============================================================================
 // Container management
 // ============================================================================
-
-/** 单容器最大通知数（超出时移除最早的一条） */
-const MAX_TOASTS = 10;
 
 const containerMap = new Map<ToastPosition, HTMLElement>();
 
@@ -76,11 +75,11 @@ function removeOldestToast(container: HTMLElement) {
 // ============================================================================
 
 function createMessage(type: ToastType, message: string, options: MessageOptions = {}) {
-  const { duration = 3000, position = "top" } = options;
+  const { duration = 3000, position = "top", maxToasts = 10 } = options;
   const container = getContainer(position);
 
   // 超限时移除最早的一条
-  if (countToasts(container) >= MAX_TOASTS) {
+  if (countToasts(container) >= maxToasts) {
     removeOldestToast(container);
   }
 

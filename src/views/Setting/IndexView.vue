@@ -1,31 +1,28 @@
 <!-- * @description: 系统设置 — 个性化壁纸、用户登录、侧边栏导航 -->
 <script lang="ts" setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import SideMenu from "@/components/SidebarMenu.vue";
 import personalizationIcon from "@/assets/setting/icons/personalization.svg";
+import accountIcon from "@/assets/setting/icons/user-solid.svg";
 import PersonalizationView from "./components/PersonalizationView.vue";
-import LoginCard from "@/views/Login/components/LoginCard.vue";
-import LoginForm from "@/views/Login/components/LoginForm.vue";
-import { useUserInfoStore } from "@/stores/iMusic/userInfo";
+import AccountView from "./components/AccountView.vue";
+import Login from "@/views/Login/IndexView.vue";
+import { useUserInfoStore } from "@/stores/userInfo.ts";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
-
-const menuList = [
-  {
-    name: "个性化",
-    icon: personalizationIcon,
-  },
-];
+import closeIcon from "@/assets/icons/close-light.svg";
+import logoAvatar from "@/assets/icons/logo-dark.svg";
+interface MenuList {
+  name: string;
+  icon: string;
+}
+const menuList = ref<MenuList[]>([]);
 
 const userStore = useUserInfoStore();
 
 // 从 store 读取用户名，取首字母作头像缩写
 const username = computed(() => {
-  const u = userStore.data?.user?.username;
+  const u = userStore.data?.user?.userName;
   return u || "未登录";
-});
-
-const avatarLetter = computed(() => {
-  return username.value.charAt(0).toUpperCase();
 });
 
 // ---- 登录弹窗 ----
@@ -39,18 +36,46 @@ const closeLoginModal = () => {
   showLoginModal.value = false;
 };
 
-const onLoginSuccess = () => {
-  showLoginModal.value = false;
-};
-
 // ---- 菜单 ----
 const focusMenuIdx = ref(0);
-const focusMenuItem = ref("");
 
 const clickMenu = (item: { name: string; icon: string }, index: number) => {
   focusMenuIdx.value = index;
-  focusMenuItem.value = item.name;
 };
+
+// 登录状态
+const loginStatus = (status: boolean) => {
+  showLoginModal.value = !status;
+};
+
+// 监听账户状态
+watch(
+  () => userStore.data?.user.isLogin,
+  (val) => {
+    if (!val) {
+      menuList.value = [
+        {
+          name: "个性化",
+          icon: personalizationIcon,
+        },
+      ];
+      focusMenuIdx.value = 0;
+    } else {
+      menuList.value = [
+        {
+          name: "个性化",
+          icon: personalizationIcon,
+        },
+        {
+          name: "账户",
+          icon: accountIcon,
+        },
+      ];
+      focusMenuIdx.value = 1;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -67,13 +92,15 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
         @keydown.space.prevent="openLoginModal"
       >
         <div class="index__view--avatar">
-          <span class="index__view--avatar-text">{{ avatarLetter }}</span>
+          <img v-if="userStore.data?.user?.userName" :src="userStore.data?.user?.avatar" />
+          <img v-else :src="logoAvatar" />
         </div>
         <span class="index__view--username">{{ username }}</span>
       </div>
+      <!-- 侧边菜单栏 -->
       <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
     </div>
-
+    <!-- 右侧内容区域 -->
     <div class="index__view--content">
       <OverlayScrollbarsComponent
         defer
@@ -85,42 +112,21 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
           },
         }"
       >
-        <PersonalizationView v-show="focusMenuIdx == 0"></PersonalizationView>
+        <PersonalizationView v-if="focusMenuIdx == 0"></PersonalizationView>
+        <AccountView v-else-if="focusMenuIdx == 1"></AccountView>
       </OverlayScrollbarsComponent>
     </div>
 
     <!-- 登录弹窗 -->
     <Teleport to="body">
       <Transition name="login-modal">
-        <div
-          v-if="showLoginModal"
-          class="login-modal__overlay"
-          @click.self="closeLoginModal"
-          @keydown.escape="closeLoginModal"
-        >
+        <div v-if="showLoginModal" class="login-modal__overlay">
           <div class="login-modal__card-wrapper">
             <!-- 关闭按钮 -->
-            <button
-              class="login-modal__close"
-              @click="closeLoginModal"
-              type="button"
-              aria-label="关闭登录窗口"
-            >
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              >
-                <line x1="4" y1="4" x2="12" y2="12" />
-                <line x1="12" y1="4" x2="4" y2="12" />
-              </svg>
+            <button class="login-modal__close" @click="closeLoginModal" type="button">
+              <img :src="closeIcon" />
             </button>
-
-            <LoginCard title="MIX OS" subtitle="登录您的帐号">
-              <LoginForm :standalone="false" @login-success="onLoginSuccess" />
-            </LoginCard>
+            <Login @login-status="loginStatus"></Login>
           </div>
         </div>
       </Transition>
@@ -173,13 +179,8 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
     border-radius: 50%;
     border: 1px solid #ddd;
     background: #fff;
-    flex-shrink: 0;
-  }
-
-  &--avatar-text {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
+    overflow: hidden;
+    padding: 5px;
   }
 
   // ---- 用户名 ----
@@ -211,7 +212,7 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
   &__overlay {
     position: fixed;
     inset: 0;
-    z-index: 10000;
+    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -226,6 +227,8 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
     position: relative;
     width: 100%;
     max-width: 420px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 20px;
   }
 
   // ---- 关闭按钮 ----
@@ -243,84 +246,21 @@ const clickMenu = (item: { name: string; icon: string }, index: number) => {
     border: none;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
     cursor: pointer;
+    transform: rotate(-90deg);
     transition:
       background 150ms ease,
-      color 150ms ease;
-
-    svg {
-      width: 14px;
-      height: 14px;
-    }
-
+      color 150ms ease,
+      transform 150ms ease;
     &:hover {
       background: rgba(255, 255, 255, 0.15);
-      color: #f1f5f9;
+      transform: rotate(90deg);
+      transition: 0.2s all;
     }
-
-    &:focus-visible {
-      outline: 2px solid #60a5fa;
-      outline-offset: 2px;
+    img {
+      width: 24px;
+      height: 24px;
     }
-  }
-}
-
-// ---- 弹窗动画 ----
-.login-modal-enter-active {
-  transition: opacity 300ms ease;
-
-  .login-modal__card-wrapper {
-    transition:
-      opacity 300ms ease,
-      transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
-  }
-}
-
-.login-modal-leave-active {
-  transition: opacity 200ms ease;
-
-  .login-modal__card-wrapper {
-    transition:
-      opacity 200ms ease,
-      transform 200ms ease-in;
-  }
-}
-
-.login-modal-enter-from {
-  opacity: 0;
-
-  .login-modal__card-wrapper {
-    opacity: 0;
-    transform: translateY(20px) scale(0.96);
-  }
-}
-
-.login-modal-leave-to {
-  opacity: 0;
-
-  .login-modal__card-wrapper {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.98);
-  }
-}
-
-// ---- reduced-motion ----
-@media (prefers-reduced-motion: reduce) {
-  .login-modal-enter-active,
-  .login-modal-leave-active {
-    transition: none !important;
-
-    .login-modal__card-wrapper {
-      transition: none !important;
-    }
-  }
-}
-
-// ---- 小屏适配 ----
-@media (max-width: 460px) {
-  .login-modal__overlay {
-    padding: 16px;
   }
 }
 </style>

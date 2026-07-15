@@ -28,7 +28,7 @@ const handleMenu = (menu: { name: string; icon: string }, index: number) => {
 </template>
 
 <style scoped lang="scss">
-$menu-item-hover-color: #eaeaea;
+$menu-item-hover-color: rgba(234, 234, 234, 0.55);
 $menu-item-active-color: #0067c0;
 .menu-list {
   overflow-y: auto;
@@ -45,6 +45,14 @@ $menu-item-active-color: #0067c0;
     &:hover {
       cursor: pointer;
       background-color: $menu-item-hover-color;
+      transition: 0.3s all;
+    }
+    img {
+      width: 18px;
+    }
+    span {
+      font-size: 14px;
+      font-weight: 400;
     }
   }
   .active-item {

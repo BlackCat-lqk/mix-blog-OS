@@ -1,32 +1,33 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath, URL } from "node:url";
 
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import vueDevTools from "vite-plugin-vue-devtools";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
+  plugins: [vue(), vueDevTools()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
   server: {
     proxy: {
-      '/music': {
-        target: 'http://localhost:3001', // 代理目标地址
+      "/api": {
+        target: "http://localhost:3000", // 代理目标地址
         changeOrigin: true,
       },
-      '/user': {
-        target: 'http://localhost:3001', // 代理目标地址
+      "/music": {
+        target: "http://localhost:3000", // 代理目标地址
         changeOrigin: true,
       },
-      '/uploads': {
-        target: 'http://localhost:3001', // 代理目标地址
+      "/user": {
+        target: "http://localhost:3000", // 代理目标地址
+        changeOrigin: true,
+      },
+      "/uploads": {
+        target: "http://localhost:3000", // 代理目标地址
         changeOrigin: true,
       },
     },
@@ -35,4 +36,4 @@ export default defineConfig({
       interval: 100,
     },
   },
-})
+});

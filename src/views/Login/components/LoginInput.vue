@@ -4,7 +4,8 @@
 -->
 <script setup lang="ts">
 import { ref, computed, useId } from "vue";
-
+import eyeOpen from "@/assets/icons/eye-open-light.svg";
+import eyeClose from "@/assets/icons/eye-close-light.svg";
 const uid = useId();
 
 const props = withDefaults(
@@ -74,7 +75,7 @@ const onInput = (e: Event) => {
     <div class="login-input__wrapper">
       <!-- 左侧图标 -->
       <span v-if="icon" class="login-input__icon" aria-hidden="true">
-        <img :src="icon" alt="" />
+        <img :src="icon" />
       </span>
 
       <input
@@ -99,44 +100,14 @@ const onInput = (e: Event) => {
         @click="togglePassword"
       >
         <!-- 眼睛关闭图标 -->
-        <svg
-          v-if="!showPassword"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M2.062 10.267C1.98 10.101 1.98 9.9 2.062 9.733C3.687 6.317 6.688 4 10 4C13.312 4 16.313 6.317 17.938 9.733C18.021 9.9 18.021 10.101 17.938 10.267C16.313 13.683 13.312 16 10 16C6.688 16 3.687 13.683 2.062 10.267Z" />
-          <circle cx="10" cy="10" r="2.5" />
-          <line x1="2" y1="18" x2="18" y2="2" />
-        </svg>
+        <img v-if="!showPassword" :src="eyeClose" />
         <!-- 眼睛开启图标 -->
-        <svg
-          v-else
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M2.062 10.267C1.98 10.101 1.98 9.9 2.062 9.733C3.687 6.317 6.688 4 10 4C13.312 4 16.313 6.317 17.938 9.733C18.021 9.9 18.021 10.101 17.938 10.267C16.313 13.683 13.312 16 10 16C6.688 16 3.687 13.683 2.062 10.267Z" />
-          <circle cx="10" cy="10" r="2.5" />
-        </svg>
+        <img v-else :src="eyeOpen" />
       </button>
     </div>
 
     <!-- 错误信息 -->
-    <p
-      v-if="hasError"
-      :id="`login-input-error-${uid}`"
-      class="login-input__error"
-      role="alert"
-    >
+    <p v-if="hasError" :id="`login-input-error-${uid}`" class="login-input__error" role="alert">
       {{ error }}
     </p>
   </div>
@@ -156,23 +127,13 @@ $error-bg: rgba(239, 68, 68, 0.08);
 $disabled-opacity: 0.4;
 $radius: 10px;
 $field-h: 48px;
-$transition: 200ms ease;
-
-// ---- reduced-motion ----
-@media (prefers-reduced-motion: reduce) {
-  .login-input,
-  .login-input__field,
-  .login-input__toggle {
-    transition-duration: 0ms !important;
-  }
-}
 
 .login-input {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 100%;
-
+  position: relative;
   // ---- label ----
   &__label {
     font-size: 13px;
@@ -190,9 +151,6 @@ $transition: 200ms ease;
     border: 1px solid $border;
     border-radius: $radius;
     background: $bg;
-    transition:
-      border-color $transition,
-      box-shadow $transition;
     overflow: hidden;
   }
 
@@ -209,7 +167,6 @@ $transition: 200ms ease;
     img {
       width: 18px;
       height: 18px;
-      opacity: 0.5;
     }
   }
 
@@ -217,28 +174,26 @@ $transition: 200ms ease;
   &__field {
     flex: 1;
     height: 100%;
-    padding: 0 14px;
+    padding-right: 14px;
     border: none;
-    background: transparent;
-    font-size: 14px;
-    color: $text;
+    font-size: 13px;
     font-family: inherit;
     outline: none;
-
+    background: unset;
+    color: $text;
     &::placeholder {
       color: $placeholder;
     }
 
     &:disabled {
       opacity: $disabled-opacity;
-      cursor: not-allowed;
     }
   }
 
   // ---- focus state ----
   &__wrapper:focus-within {
     border-color: $focus-ring;
-    box-shadow: 0 0 0 3px $focus-ring-glow;
+    box-shadow: 0 0 0 1px $focus-ring-glow;
   }
 
   // ---- password toggle ----
@@ -254,11 +209,8 @@ $transition: 200ms ease;
     background: transparent;
     color: $text-secondary;
     cursor: pointer;
-    transition:
-      color $transition,
-      background $transition;
 
-    svg {
+    img {
       width: 18px;
       height: 18px;
     }
@@ -295,6 +247,8 @@ $transition: 200ms ease;
 
   // ---- error message ----
   &__error {
+    position: absolute;
+    bottom: -20px;
     margin: 0;
     font-size: 12px;
     line-height: 1.4;
