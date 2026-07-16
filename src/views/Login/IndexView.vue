@@ -66,8 +66,8 @@ const handleSubmit = async () => {
     });
     const res = data.data;
     if (res.code === 200 && res.data) {
+      res.data.isLogin = true;
       userInfoStore.setUserInfo(res.data);
-      userInfoStore.setAuthStatus(true);
       Message.success(res.message, {
         duration: 3000,
         position: "top",
@@ -161,7 +161,7 @@ const canSubmit = computed(
 
 <style scoped lang="scss">
 // 公共变量
-$card-bg: rgba(255, 255, 255, 0.07);
+$card-bg: rgba(0, 0, 0, 0.85);
 $card-border: rgba(255, 255, 255, 0.1);
 $card-shadow:
   0 0 0 1px rgba(255, 255, 255, 0.05),
@@ -197,11 +197,10 @@ $radius: 10px;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    margin-bottom: 28px;
   }
   // ---- Logo ----
   &__logo {
-    width: 96px;
+    width: 128px;
     color: #60a5fa;
     margin-bottom: 4px;
   }

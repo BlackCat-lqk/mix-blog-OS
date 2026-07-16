@@ -11,10 +11,6 @@
           @click="keyword = ''"
         />
       </div>
-      <div class="middle-box">
-        <span>News Feed</span>
-        <span>Shuffle Play</span>
-      </div>
     </div>
     <div class="right-bar">
       <img src="@/assets/iMusic/icons/inform.svg" @click="toggleMessageOverlay" />
@@ -40,6 +36,11 @@
       </Transition>
     </div>
   </div>
+  <Teleport to="body">
+    <div v-if="showUploadForm">
+      <UploadForm></UploadForm>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -51,10 +52,12 @@ import NotificationContent from "./NotificationContent.vue";
 import UserLogin from "./UserLogin.vue";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
 import { useEventStore } from "@/stores/iMusic/eventStore";
+import UploadForm from "./UploadForm.vue";
 // import SeetingView from "@/views/Setting/IndexView.vue";
 
 const eventStore = useEventStore();
 const userInfoStore = useUserInfoStore();
+const showUploadForm = ref(false);
 
 // 使用 OsWindow 的 overlay 系统（OsWindow 不存在时 fallback 不显示）
 const osOverlay = inject("osOverlay") as
@@ -124,16 +127,17 @@ const handleSetting = () => {
 
 // 上传音乐
 const goUpload = () => {
-  if (!userInfoStore.data.token) {
-    pendingUploadAfterLogin.value = true;
-    visibleLogin.value = true;
-    return;
-  }
-  eventStore.initPlay();
-  visibleSetting.value = false;
-  pendingUploadAfterLogin.value = false;
-  router.push("/upload");
-  closeMenu();
+  showUploadForm.value = true;
+  // if (!userInfoStore.data.token) {
+  //   pendingUploadAfterLogin.value = true;
+  //   visibleLogin.value = true;
+  //   return;
+  // }
+  // eventStore.initPlay();
+  // visibleSetting.value = false;
+  // pendingUploadAfterLogin.value = false;
+  // router.push("/upload");
+  // closeMenu();
 };
 
 watch(
@@ -219,20 +223,6 @@ $bg-color: rgba(255, 255, 255, 0.9);
       .search-icon {
         width: 16px;
         height: 16px;
-      }
-    }
-    .middle-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      span {
-        font-size: 16px;
-        font-weight: 500;
-        opacity: 0.7;
-        &:hover {
-          cursor: pointer;
-          opacity: 1;
-        }
       }
     }
   }

@@ -101,7 +101,7 @@
           <div class="form-actions form-group--full">
             <button type="button" class="btn btn-cancel" @click="handleClose">Cancle</button>
             <button type="submit" class="btn btn-submit" :disabled="submitting">
-              {{ submitting ? 'Submiting...' : 'Submit' }}
+              {{ submitting ? "Submiting..." : "Submit" }}
             </button>
           </div>
         </form>
@@ -124,10 +124,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive } from 'vue'
-import FileUpload from './FileUpload.vue'
-import { createMusicApi } from '@/server/musicHttp'
-import DialogNotification from '@/views/common/DialogNotification.vue'
+import { ref, reactive } from "vue";
+import FileUpload from "./FileUpload.vue";
+// import { createMusicApi } from "@/server/musicHttp";
+import DialogNotification from "./DialogNotification.vue";
 const props = defineProps({
   visible: {
     type: Boolean,
@@ -138,127 +138,128 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-})
-const notificationVisible = ref(false)
-const emit = defineEmits(['update:visible'])
+});
+const notificationVisible = ref(false);
+const emit = defineEmits(["update:visible"]);
 
 // 表单数据
 const formData = reactive({
-  title: '',
-  artist: '',
+  title: "",
+  artist: "",
   duration: 180,
   audioUrl: null as File | null,
   coverUrl: null as File | null,
   lyricsUrl: null as File | null,
-})
+});
 
 const handleFile = (file: File | null, fielName: string) => {
-  if (fielName == 'audioUrl') {
-    formData.audioUrl = file
-  } else if (fielName == 'coverUrl') {
-    formData.coverUrl = file
-  } else if (fielName == 'lyricsUrl') {
-    formData.lyricsUrl = file
+  if (fielName == "audioUrl") {
+    formData.audioUrl = file;
+  } else if (fielName == "coverUrl") {
+    formData.coverUrl = file;
+  } else if (fielName == "lyricsUrl") {
+    formData.lyricsUrl = file;
   }
-  console.log('file', formData)
-}
+  console.log("file", formData);
+};
 // 提交状态
-const submitting = ref(false)
+const submitting = ref(false);
 const handleCloseTip = () => {
-  notificationVisible.value = false
-}
+  notificationVisible.value = false;
+};
 // 关闭弹窗（内嵌模式仅重置表单）
 const handleClose = () => {
-  resetForm()
+  resetForm();
   if (!props.inline) {
-    emit('update:visible', false)
+    emit("update:visible", false);
   }
-}
+};
 
 const onOverlayClick = () => {
-  if (!props.inline) handleClose()
-}
+  if (!props.inline) handleClose();
+};
 const removeFile = (value: string) => {
-  if (value == 'audioUrl') {
-    formData.audioUrl = null
-  } else if (value == 'coverUrl') {
-    formData.coverUrl = null
-  } else if (value == 'lyricsUrl') {
-    formData.lyricsUrl = null
+  if (value == "audioUrl") {
+    formData.audioUrl = null;
+  } else if (value == "coverUrl") {
+    formData.coverUrl = null;
+  } else if (value == "lyricsUrl") {
+    formData.lyricsUrl = null;
   }
-}
+};
 // 重置表单
 const resetForm = () => {
-  formData.title = ''
-  formData.artist = ''
-  formData.duration = 180
-  formData.audioUrl = null
-  formData.coverUrl = null
-  formData.lyricsUrl = null
-}
+  formData.title = "";
+  formData.artist = "";
+  formData.duration = 180;
+  formData.audioUrl = null;
+  formData.coverUrl = null;
+  formData.lyricsUrl = null;
+};
 // 上传
-const inforMsg = ref('')
-const uploadLoading = ref(false)
+const inforMsg = ref("");
+const uploadLoading = ref(false);
 const upload = async (params: object) => {
-  const res = await createMusicApi(params)
-  if (res.data) {
-    inforMsg.value = '上传成功'
-  } else {
-    inforMsg.value = '上传失败, token已过期或请先登录'
-  }
-  notificationVisible.value = true
-  uploadLoading.value = false
-}
+  console.log(params);
+  // const res = await createMusicApi(params);
+  // if (res.data) {
+  //   inforMsg.value = "上传成功";
+  // } else {
+  //   inforMsg.value = "上传失败, token已过期或请先登录";
+  // }
+  // notificationVisible.value = true;
+  // uploadLoading.value = false;
+};
 
 // 表单提交
 const handleSubmit = async () => {
   try {
-    uploadLoading.value = true
-    submitting.value = true
+    uploadLoading.value = true;
+    submitting.value = true;
 
     // 验证必填字段
     if (!formData.title.trim()) {
-      alert('请填写名称')
-      return
+      alert("请填写名称");
+      return;
     }
 
     if (!formData.artist.trim()) {
-      alert('请填写名称')
-      return
+      alert("请填写名称");
+      return;
     }
-    const formDataFont = new FormData()
+    const formDataFont = new FormData();
     // 添加音乐信息（对应 createMusicDto）
-    formDataFont.append('title', formData.title)
-    formDataFont.append('artist', formData.artist)
-    formDataFont.append('duration', '240')
+    formDataFont.append("title", formData.title);
+    formDataFont.append("artist", formData.artist);
+    formDataFont.append("duration", "240");
     if (formData.audioUrl) {
-      formDataFont.append('audioFile', formData.audioUrl)
+      formDataFont.append("audioFile", formData.audioUrl);
     }
 
     if (formData.coverUrl) {
-      formDataFont.append('coverFile', formData.coverUrl)
+      formDataFont.append("coverFile", formData.coverUrl);
     }
 
     if (formData.lyricsUrl) {
-      formDataFont.append('lyricsFile', formData.lyricsUrl)
+      formDataFont.append("lyricsFile", formData.lyricsUrl);
     }
-    await upload(formDataFont)
-    submitting.value = false
+    await upload(formDataFont);
+    submitting.value = false;
     if (props.inline) {
-      resetForm()
+      resetForm();
     } else {
-      handleClose()
+      handleClose();
     }
   } catch (error) {
-    console.error(error)
-    notificationVisible.value = true
-    uploadLoading.value = false
-    inforMsg.value = '上传失败, token已过期或请先登录'
+    console.error(error);
+    notificationVisible.value = true;
+    uploadLoading.value = false;
+    inforMsg.value = "上传失败, token已过期或请先登录";
   } finally {
-    submitting.value = false
-    uploadLoading.value = false
+    submitting.value = false;
+    uploadLoading.value = false;
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -452,13 +453,13 @@ const handleSubmit = async () => {
   color: #ffffff;
 
   &::after {
-    content: ' *';
+    content: " *";
     color: #ff4d4f;
     opacity: 0.8;
   }
 
   &:has(~ :not([required]))::after {
-    content: '';
+    content: "";
   }
 }
 
@@ -500,7 +501,7 @@ const handleSubmit = async () => {
     color: #999;
   }
 
-  &[type='number'] {
+  &[type="number"] {
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
       -webkit-appearance: none;
