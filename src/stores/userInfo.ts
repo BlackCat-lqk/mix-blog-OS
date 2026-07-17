@@ -23,7 +23,6 @@ export const useUserInfoStore = defineStore("userInfo", {
   }),
   actions: {
     setUserInfo(val: UserData) {
-      console.log(val);
       this.data = val;
     },
     setUserAvatar(val: string) {

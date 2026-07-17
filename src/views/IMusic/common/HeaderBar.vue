@@ -15,7 +15,7 @@
     <div class="right-bar">
       <img src="@/assets/iMusic/icons/inform.svg" @click="toggleMessageOverlay" />
       <div class="avatar-info">
-        <UserAccountEntry variant="rail" @need-login="visibleLogin = true" />
+        <UserAccountEntry variant="rail" />
       </div>
       <img
         ref="rootRef"
@@ -37,8 +37,8 @@
     </div>
   </div>
   <Teleport to="body">
-    <div v-if="showUploadForm">
-      <UploadForm></UploadForm>
+    <div v-if="showUploadForm" class="teleport-upload-misuc">
+      <UploadView></UploadView>
     </div>
   </Teleport>
 </template>
@@ -49,10 +49,9 @@ import type { Component, VNode } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import UserAccountEntry from "./UserAccountEntry.vue";
 import NotificationContent from "./NotificationContent.vue";
-import UserLogin from "./UserLogin.vue";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
 import { useEventStore } from "@/stores/iMusic/eventStore";
-import UploadForm from "./UploadForm.vue";
+import UploadView from "../Upload/IndexView.vue";
 // import SeetingView from "@/views/Setting/IndexView.vue";
 
 const eventStore = useEventStore();
@@ -64,6 +63,8 @@ const osOverlay = inject("osOverlay") as
   | {
       visible: boolean;
       title: string;
+      width: string;
+      height: string;
       content: (() => VNode) | Component | null;
       closeOnMask: boolean;
     }
@@ -74,36 +75,13 @@ const toggleMessageOverlay = () => {
   if (osOverlay.visible) {
     osOverlay.visible = false;
   } else {
-    osOverlay.title = "通知";
+    osOverlay.title = "消息";
     osOverlay.content = markRaw(NotificationContent);
     osOverlay.visible = true;
+    osOverlay.width = "300px";
+    osOverlay.height = "auto";
   }
 };
-
-const visibleLogin = ref(false);
-
-// visibleLogin 变化 → 显示/隐藏登录 overlay
-watch(visibleLogin, (v) => {
-  if (!osOverlay) return;
-  if (v) {
-    osOverlay.title = "Login";
-    osOverlay.content = markRaw(UserLogin);
-    osOverlay.closeOnMask = false;
-    osOverlay.visible = true;
-  } else {
-    osOverlay.visible = false;
-  }
-});
-
-// overlay 被关闭（点 X 或 UserLogin 内部关闭）→ 同步回 visibleLogin
-watch(
-  () => osOverlay?.visible,
-  (v) => {
-    if (v === false && visibleLogin.value) {
-      visibleLogin.value = false;
-    }
-  },
-);
 
 const visibleSetting = ref(false);
 const menuOpen = ref(false);
@@ -117,7 +95,6 @@ const route = useRoute();
 
 const handleSetting = () => {
   if (!userInfoStore.data.token) {
-    visibleLogin.value = true;
     return;
   }
   eventStore.initPlay();
@@ -127,7 +104,17 @@ const handleSetting = () => {
 
 // 上传音乐
 const goUpload = () => {
-  showUploadForm.value = true;
+  if (!osOverlay) return;
+  if (osOverlay.visible) {
+    osOverlay.visible = false;
+  } else {
+    osOverlay.title = "UPLOAD MUSIC";
+    osOverlay.content = markRaw(UploadView);
+    osOverlay.visible = true;
+    osOverlay.width = "auto";
+    osOverlay.height = "auto";
+  }
+  // showUploadForm.value = true;
   // if (!userInfoStore.data.token) {
   //   pendingUploadAfterLogin.value = true;
   //   visibleLogin.value = true;
@@ -204,13 +191,17 @@ $bg-color: rgba(255, 255, 255, 0.9);
       padding: 2px 20px 2px 10px;
       border-radius: 4px;
       position: relative;
-      input {
+      height: 36px;
+      width: 260px;
+      .search-input {
         border: unset;
+        background: unset;
+        display: flex;
+        align-items: center;
+        font-size: 12px;
+        width: 100%;
         &:focus {
           outline: unset;
-        }
-        &::placeholder {
-          font-size: 12px;
         }
       }
       .close-icon {
@@ -248,9 +239,9 @@ $bg-color: rgba(255, 255, 255, 0.9);
   position: absolute;
   top: 100%;
   right: -10px;
-  background: rgba(0, 0, 0, 0.01);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(5px);
-  border-radius: 0 0 0 8px;
   z-index: 1;
   .menu-item {
     display: flex;
@@ -266,7 +257,7 @@ $bg-color: rgba(255, 255, 255, 0.9);
     font-family: inherit;
     transition: background 0.12s ease;
     &:hover {
-      background-color: rgba(255, 255, 255, 1);
+      background-color: rgba(0, 0, 0, 0.05);
     }
     .pc-rail-icon {
       width: 20px;
@@ -276,5 +267,22 @@ $bg-color: rgba(255, 255, 255, 0.9);
       filter: brightness(1.1);
     }
   }
+}
+.teleport-upload-misuc {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 20px;
+  height: 100vh;
+  max-height: 100vh;
+  animation: fadeIn 0.3s ease;
 }
 </style>

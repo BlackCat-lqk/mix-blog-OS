@@ -1,12 +1,16 @@
 <template>
   <div class="message-box">
     <div>
-      <img src="@/assets/iMusic/icons/qz.svg" />
+      <img :src="qz" />
     </div>
-    <span>最懂你的iMusic</span>
-    <span class="version">version：0.1.2</span>
+    <span>IKUN MUSIC</span>
+    <span class="version">version：0.2.0</span>
   </div>
 </template>
+
+<script setup lang="ts">
+import qz from "@/assets/iMusic/icons/qz.svg";
+</script>
 
 <style scoped lang="scss">
 .message-box {
@@ -15,9 +19,6 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 100%;
-  width: 200px;
-  padding: 30px 0;
   img {
     width: 30px;
     height: 30px;

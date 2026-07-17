@@ -44,11 +44,15 @@ const osOverlay = reactive<{
   content: (() => VNode) | Component | null;
   /** 点击遮罩层是否关闭弹窗，默认 true */
   closeOnMask: boolean;
+  width: string;
+  height: string;
 }>({
   visible: false,
   title: "",
   content: null,
   closeOnMask: true,
+  width: "80%",
+  height: "80%",
 });
 
 const onOverlayMaskClick = () => {
@@ -437,6 +441,8 @@ onUnmounted(() => {
       <DialogNotification
         :visible="true"
         :title="osOverlay.title"
+        :width="osOverlay.width"
+        :height="osOverlay.height"
         inline
         @update:visible="osOverlay.visible = false"
       >

@@ -66,8 +66,8 @@ const handleSubmit = async () => {
     });
     const res = data.data;
     if (res.code === 200 && res.data) {
-      res.data.isLogin = true;
       userInfoStore.setUserInfo(res.data);
+      userInfoStore.setAuthStatus(true);
       Message.success(res.message, {
         duration: 3000,
         position: "top",
