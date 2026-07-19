@@ -127,9 +127,9 @@ const canSubmit = computed(
         <!-- 帐号 -->
         <LoginInput
           v-model="account"
-          label="帐号"
+          label="邮箱账号"
           type="text"
-          placeholder="请输入帐号"
+          placeholder="请输入邮箱帐号"
           :error="accountError"
           :disabled="loading"
           :icon="iconAccount"
