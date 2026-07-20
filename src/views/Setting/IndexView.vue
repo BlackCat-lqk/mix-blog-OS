@@ -92,8 +92,7 @@ watch(
         @keydown.space.prevent="openLoginModal"
       >
         <div class="index__view--avatar">
-          <img v-if="userStore.data?.user?.userName" :src="userStore.data?.user?.avatar" />
-          <img v-else :src="logoAvatar" />
+          <img :src="userStore.data?.user?.avatar || logoAvatar" />
         </div>
         <span class="index__view--username">{{ username }}</span>
       </div>

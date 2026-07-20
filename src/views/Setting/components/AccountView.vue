@@ -3,42 +3,54 @@
 import { reactive } from "vue";
 import { Message } from "@/utils/message";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
-import { logOutUserApi, updateUsers } from "@/server/user";
+import { logOutUserApi, updateUsersInfoApi } from "@/server/user";
 import closeIcon from "@/assets/icons/close.svg";
 import FileUpload from "@/components/FileUpload.vue";
+import logoAvatar from "@/assets/icons/logo-dark.svg";
 const userStore = useUserInfoStore();
 
 // 表单数据
-const formData = reactive({
+const form = reactive({
   coverUrl: null as File | null,
+  userName: "" as string,
 });
 // 选择头像
 const handleFile = (file: File | null, fielName: string) => {
   if (fielName == "coverUrl") {
-    formData.coverUrl = file;
+    form.coverUrl = file;
   }
 };
 // 取消选择头像文件
 const removeFile = (value: string) => {
   if (value == "coverUrl") {
-    formData.coverUrl = null;
+    form.coverUrl = null;
   }
 };
 // 提交修改
-const submit = () => {
-  const userStore.data.user.email
-  const data = {
-    avatar:
+const submit = async () => {
+  try {
+    const formData = new FormData();
+    console.log(form.userName);
+    formData.append("userName", form.userName);
+    formData.append("avatar", form.coverUrl || "");
+    const data = await updateUsersInfoApi(formData);
+    const res = data.data;
+    if (res.code === 200 && res.data) {
+      Message.success("更新成功");
+    }
+  } catch (e) {
+    const error = e as Error;
+    Message.error(error.message);
   }
-}
+};
 // 退出登录
 const outLogin = async () => {
   try {
     const data = await logOutUserApi();
     const res = data.data;
-    if (res.code === 200 && res.success) {
+    if (res.code === 200) {
       userStore.removeUserInfo();
-      Message.success("退出成功");
+      Message.success(res.message || "退出成功");
     } else {
       Message.error("退出失败");
     }
@@ -51,9 +63,9 @@ const outLogin = async () => {
 
 <template>
   <div class="account-box">
-    <div class="account-box-header">
-      <div class="account-box--avatar">
-        <img :src="userStore.data?.user?.avatar" />
+    <div class="account-box--header">
+      <div class="account-box--header--avatar">
+        <img :src="userStore.data?.user?.avatar || logoAvatar" />
         <div class="account-box--info">
           <span>{{ userStore.data?.user?.userName }}</span>
           <span>{{ userStore.data?.user?.email }}</span>
@@ -67,9 +79,9 @@ const outLogin = async () => {
       <div class="form-group form-group--file">
         <label for="cover" class="form-label">头像</label>
         <FileUpload
-          v-if="!formData.coverUrl"
+          v-if="!form.coverUrl"
           ref="coverUrlRef"
-          v-model="formData.coverUrl"
+          v-model="form.coverUrl"
           accept="image/*"
           max-size="1"
           :required="true"
@@ -77,11 +89,17 @@ const outLogin = async () => {
           @file-selected="(file: File) => handleFile(file, 'coverUrl')"
         />
         <div v-else class="file-info">
-          {{ formData.coverUrl.name }}
+          {{ form.coverUrl.name }}
           <button type="button" class="remove-file" @click="removeFile('coverUrl')">
             <img :src="closeIcon" />
           </button>
         </div>
+        <input
+          v-model="form.userName"
+          type="text"
+          class="delete-search-input"
+          placeholder="用户名"
+        />
       </div>
       <button class="submit" @click="submit">提交</button>
     </div>

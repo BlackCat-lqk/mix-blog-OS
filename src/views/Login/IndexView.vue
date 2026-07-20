@@ -7,7 +7,7 @@ import { ref, computed } from "vue";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
 import logoIcon from "@/assets/icons/logo-light.svg";
 import { Message } from "@/utils/message";
-import { loginUserApi } from "@/server/user.ts";
+import { loginUserApi, registerUserApi } from "@/server/user.ts";
 import iconAccount from "@/assets/icons/account-light.svg";
 import iconPassword from "@/assets/icons/password-light.svg";
 import LoginInput from "./components/LoginInput.vue";
@@ -106,6 +106,25 @@ const onKeydown = (e: KeyboardEvent) => {
   }
 };
 
+// 注册
+const register = async () => {
+  try {
+    const params = {
+      userName: account.value.trim(),
+      email: account.value.trim(),
+      password: password.value,
+    };
+    const data = await registerUserApi(params);
+    const res = data.data;
+    if (res.code === 200) {
+      Message.success(res.message);
+    }
+  } catch (e) {
+    const error = e as Error;
+    Message.error(error.message);
+  }
+};
+
 // ---- 按钮是否可点击 ----
 const canSubmit = computed(
   () => !loading.value && account.value.trim().length > 0 && password.value.length > 0,
@@ -144,16 +163,22 @@ const canSubmit = computed(
           :disabled="loading"
           :icon="iconPassword"
         />
-        <!-- 提交按钮 -->
-        <button
-          v-loading="loading"
-          type="submit"
-          class="login-form__submit"
-          :class="{ 'login-form__submit--loading': loading }"
-          :disabled="!canSubmit"
-        >
-          <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }">登 录</span>
-        </button>
+        <div class="login-register">
+          <!-- 注册按钮 -->
+          <button type="button" class="login-form__register" @click.stop="register">
+            <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }">注 册</span>
+          </button>
+          <!-- 提交按钮 -->
+          <button
+            v-loading="loading"
+            type="submit"
+            class="login-form__submit"
+            :class="{ 'login-form__submit--loading': loading }"
+            :disabled="!canSubmit"
+          >
+            <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }">登 录</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -209,54 +234,61 @@ $radius: 10px;
     width: 100%;
   }
 }
-.login-form {
+.login-register {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-
-  // ---- 提交按钮 ----
-  &__submit {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  gap: 20px;
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
     width: 100%;
-    height: 48px;
-    margin-top: 6px;
-    padding: 0 24px;
-    border: none;
-    border-radius: $radius;
-    background: $primary;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    user-select: none;
-    transition:
-      background 200ms ease,
-      transform 150ms ease,
-      box-shadow 200ms ease;
+    // ---- 提交按钮 ----
+    &__submit,
+    &__register {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 48px;
+      margin-top: 6px;
+      padding: 0 24px;
+      border: none;
+      border-radius: $radius;
+      background: $primary;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      user-select: none;
+      transition:
+        background 200ms ease,
+        transform 150ms ease,
+        box-shadow 200ms ease;
 
-    &:hover:not(:disabled) {
-      background: $primary-hover;
-      box-shadow: 0 4px 20px $primary-glow;
+      &:hover:not(:disabled) {
+        background: $primary-hover;
+        box-shadow: 0 4px 20px $primary-glow;
+      }
+
+      &:active:not(:disabled) {
+        background: $primary-active;
+        transform: scale(0.98);
+      }
+
+      &:focus-visible {
+        outline: 2px solid #60a5fa;
+        outline-offset: 2px;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
-
-    &:active:not(:disabled) {
-      background: $primary-active;
-      transform: scale(0.98);
-    }
-
-    &:focus-visible {
-      outline: 2px solid #60a5fa;
-      outline-offset: 2px;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    &__register {
+      background-color: #00361a;
     }
   }
 }
