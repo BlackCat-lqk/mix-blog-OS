@@ -1,5 +1,5 @@
 import type { Directive, DirectiveBinding } from "vue";
-import "./loading.scss";
+import "@/assets/style/loading.scss";
 
 interface MaskInstance {
   el: HTMLElement;

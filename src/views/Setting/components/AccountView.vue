@@ -13,6 +13,9 @@ const userStore = useUserInfoStore();
 const form = reactive({
   coverUrl: null as File | null,
   userName: "" as string,
+  desc: "" as string,
+  sex: "" as string,
+  birthday: "" as string,
 });
 // 选择头像
 const handleFile = (file: File | null, fielName: string) => {
@@ -30,9 +33,11 @@ const removeFile = (value: string) => {
 const submit = async () => {
   try {
     const formData = new FormData();
-    console.log(form.userName);
     formData.append("userName", form.userName);
     formData.append("avatar", form.coverUrl || "");
+    formData.append("desc", form.desc);
+    formData.append("sex", form.sex || "");
+    formData.append("birthday", form.birthday);
     const data = await updateUsersInfoApi(formData);
     const res = data.data;
     if (res.code === 200 && res.data) {
@@ -100,6 +105,14 @@ const outLogin = async () => {
           class="delete-search-input"
           placeholder="用户名"
         />
+        <input v-model="form.desc" type="text" class="delete-search-input" placeholder="签名" />
+        <input v-model="form.sex" type="text" class="delete-search-input" placeholder="性别" />
+        <input
+          v-model="form.birthday"
+          type="text"
+          class="delete-search-input"
+          placeholder="出生年月"
+        />
       </div>
       <button class="submit" @click="submit">提交</button>
     </div>
@@ -144,8 +157,7 @@ const outLogin = async () => {
     }
     .form-group--file {
       display: flex;
-      flex-direction: unset;
-      align-items: center;
+      flex-direction: column;
       & > div {
         display: flex;
         flex-direction: column;

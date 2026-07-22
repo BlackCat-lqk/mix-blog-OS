@@ -138,12 +138,12 @@ import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from "vue"
 import { formatTime } from "@/utils/formatTime";
 import { useEventStore } from "@/stores/iMusic/eventStore";
 import { useUserInfoStore } from "@/stores/iMusic/userInfo";
-import {
-  addToFavoritesApi,
-  addToLikesApi,
-  queryLikeApi,
-  removeLikesApi,
-} from "@/server/iMusic/userHttp";
+// import {
+//   addToFavoritesApi,
+//   addToLikesApi,
+//   queryLikeApi,
+//   removeLikesApi,
+// } from "@/server/iMusic/userHttp";
 const eventStore = useEventStore();
 const userInfoStore = useUserInfoStore();
 import PlayIcon from "@/assets/iMusic/icons/play.svg";

@@ -37,3 +37,9 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+# auto-generated file viewer assets (copied by @file-viewer/vite-plugin)
+public/flyfish-viewer-assets.json
+public/vendor/
+public/wasm/
+public/file-viewer/

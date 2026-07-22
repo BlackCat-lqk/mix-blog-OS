@@ -112,10 +112,12 @@ const onFileChange = (e: Event) => {
       <input ref="fileInput" type="file" accept="image/*" @change="onFileChange" hidden />
     </div>
     <!-- 选择主题 -->
-    <div>
+    <div class="index-personalozation--theme">
       <span>选择主题</span>
-      <button>浅色</button>
-      <button>深色</button>
+      <div>
+        <button type="button">浅色</button>
+        <button type="button">深色</button>
+      </div>
     </div>
   </div>
 </template>
@@ -254,6 +256,11 @@ const onFileChange = (e: Event) => {
         background-color: #f6f6f6;
       }
     }
+  }
+  &--theme {
+    display: flex;
+    gap: 20px;
+    align-items: center;
   }
 }
 </style>

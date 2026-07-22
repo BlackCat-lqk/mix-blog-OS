@@ -6,11 +6,7 @@ import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
 import IMusic from "@/views/IMusic/IndexView.vue";
 import UiColor from "@/views/UiColor/IndexView.vue";
-import ImageConverter from "@/views/ImageConverter/IndexView.vue";
-import MixAi from "@/views/MixAi/IndexView.vue";
-import SiteNav from "@/views/SiteNav/SiteNav.vue";
-import FilePreview from "@/views/FilePreview/IndexView.vue";
-import Photos from "@/views/Photos/IndexView.vue";
+import XTools from "@/views/XTools/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
@@ -126,11 +122,7 @@ watch(
       <Setting v-if="app.enName === 'Setting'" />
       <IMusic v-else-if="app.enName === 'iMusic'" />
       <UiColor v-else-if="app.enName === 'uiColor'" />
-      <ImageConverter v-else-if="app.enName === 'imageConverter'"></ImageConverter>
-      <MixAi v-else-if="app.enName === 'MIXAI'"></MixAi>
-      <FilePreview v-else-if="app.enName === 'filePreview'"></FilePreview>
-      <Photos v-else-if="app.enName === 'Photos'" />
-      <SiteNav v-else-if="app.enName === 'siteNav'"></SiteNav>
+      <XTools v-else-if="app.enName === 'X-Tools'"></XTools>
     </OsWindow>
 
     <!-- 底部任务栏 -->
