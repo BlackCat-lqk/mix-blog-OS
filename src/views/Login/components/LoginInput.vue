@@ -2,6 +2,60 @@
   LoginInput — 登录表单输入组件
   支持：文本/密码、图标前缀、密码可见切换、错误状态
 -->
+<template>
+  <div
+    class="login-input"
+    :class="{
+      'login-input--error': hasError,
+      'login-input--disabled': disabled,
+    }"
+  >
+    <!-- 标签 -->
+    <label class="login-input__label" :for="`login-input-${uid}`">
+      {{ label }}
+    </label>
+
+    <!-- 输入区域 -->
+    <div class="login-input__wrapper">
+      <!-- 左侧图标 -->
+      <span v-if="icon" class="login-input__icon" aria-hidden="true">
+        <img :src="icon" />
+      </span>
+
+      <input
+        :id="`login-input-${uid}`"
+        :type="inputType"
+        :value="modelValue"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :aria-invalid="hasError"
+        :aria-describedby="hasError ? `login-input-error-${uid}` : undefined"
+        class="login-input__field"
+        @input="onInput"
+      />
+
+      <!-- 密码可见切换 -->
+      <button
+        v-if="type === 'password'"
+        type="button"
+        class="login-input__toggle"
+        :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+        :aria-pressed="showPassword"
+        @click="togglePassword"
+      >
+        <!-- 眼睛关闭图标 -->
+        <img v-if="!showPassword" :src="eyeClose" />
+        <!-- 眼睛开启图标 -->
+        <img v-else :src="eyeOpen" />
+      </button>
+    </div>
+
+    <!-- 错误信息 -->
+    <p v-if="hasError" :id="`login-input-error-${uid}`" class="login-input__error" role="alert">
+      {{ error }}
+    </p>
+  </div>
+</template>
 <script setup lang="ts">
 import { ref, computed, useId } from "vue";
 import eyeOpen from "@/assets/icons/eye-open-light.svg";
@@ -57,62 +111,6 @@ const onInput = (e: Event) => {
   emit("update:modelValue", target.value);
 };
 </script>
-
-<template>
-  <div
-    class="login-input"
-    :class="{
-      'login-input--error': hasError,
-      'login-input--disabled': disabled,
-    }"
-  >
-    <!-- 标签 -->
-    <label class="login-input__label" :for="`login-input-${uid}`">
-      {{ label }}
-    </label>
-
-    <!-- 输入区域 -->
-    <div class="login-input__wrapper">
-      <!-- 左侧图标 -->
-      <span v-if="icon" class="login-input__icon" aria-hidden="true">
-        <img :src="icon" />
-      </span>
-
-      <input
-        :id="`login-input-${uid}`"
-        :type="inputType"
-        :value="modelValue"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        :aria-invalid="hasError"
-        :aria-describedby="hasError ? `login-input-error-${uid}` : undefined"
-        class="login-input__field"
-        @input="onInput"
-      />
-
-      <!-- 密码可见切换 -->
-      <button
-        v-if="type === 'password'"
-        type="button"
-        class="login-input__toggle"
-        :aria-label="showPassword ? '隐藏密码' : '显示密码'"
-        :aria-pressed="showPassword"
-        @click="togglePassword"
-      >
-        <!-- 眼睛关闭图标 -->
-        <img v-if="!showPassword" :src="eyeClose" />
-        <!-- 眼睛开启图标 -->
-        <img v-else :src="eyeOpen" />
-      </button>
-    </div>
-
-    <!-- 错误信息 -->
-    <p v-if="hasError" :id="`login-input-error-${uid}`" class="login-input__error" role="alert">
-      {{ error }}
-    </p>
-  </div>
-</template>
-
 <style scoped lang="scss">
 // ---- tokens ----
 $bg: rgba(255, 255, 255, 0.06);

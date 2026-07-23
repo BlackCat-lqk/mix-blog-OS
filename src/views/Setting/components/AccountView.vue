@@ -1,4 +1,56 @@
-<!-- * @description: 个性化设置 — 壁纸上传与预览 -->
+<template>
+  <div class="account-box">
+    <div class="account-box--header">
+      <div class="account-box--header--avatar">
+        <img :src="userStore.data?.user?.avatar || logoAvatar" />
+        <div class="account-box--header--info">
+          <span>{{ userStore.data?.user?.userName }}</span>
+          <span>{{ userStore.data?.user?.email }}</span>
+        </div>
+      </div>
+      <div class="account-box--header--out">
+        <button @click.stop="outLogin">退出登录</button>
+      </div>
+    </div>
+    <div class="account-box--edit">
+      <div class="form-group form-group--file">
+        <img :src="userStore.data?.user?.avatar || logoAvatar" />
+        <label for="cover" class="form-label">头像</label>
+        <FileUpload
+          v-if="!form.coverUrl"
+          ref="coverUrlRef"
+          v-model="form.coverUrl"
+          accept="image/*"
+          max-size="1"
+          :required="true"
+          label="Select Cover"
+          @file-selected="(file: File) => handleFile(file, 'coverUrl')"
+        />
+        <div v-else class="file-info">
+          {{ form.coverUrl.name }}
+          <button type="button" class="remove-file" @click="removeFile('coverUrl')">
+            <img :src="closeIcon" />
+          </button>
+        </div>
+        <input
+          v-model="form.userName"
+          type="text"
+          class="delete-search-input"
+          placeholder="用户名"
+        />
+        <input v-model="form.desc" type="text" class="delete-search-input" placeholder="签名" />
+        <input v-model="form.sex" type="text" class="delete-search-input" placeholder="性别" />
+        <input
+          v-model="form.birthday"
+          type="text"
+          class="delete-search-input"
+          placeholder="出生年月"
+        />
+      </div>
+      <button class="submit" @click="submit">提交</button>
+    </div>
+  </div>
+</template>
 <script lang="ts" setup>
 import { reactive } from "vue";
 import { Message } from "@/utils/message";
@@ -12,10 +64,10 @@ const userStore = useUserInfoStore();
 // 表单数据
 const form = reactive({
   coverUrl: null as File | null,
-  userName: "" as string,
-  desc: "" as string,
-  sex: "" as string,
-  birthday: "" as string,
+  userName: userStore.data?.user?.userName as string,
+  desc: userStore.data?.user?.desc as string,
+  sex: userStore.data?.user?.sex as string,
+  birthday: userStore.data?.user?.birthday as string,
 });
 // 选择头像
 const handleFile = (file: File | null, fielName: string) => {
@@ -65,60 +117,6 @@ const outLogin = async () => {
   }
 };
 </script>
-
-<template>
-  <div class="account-box">
-    <div class="account-box--header">
-      <div class="account-box--header--avatar">
-        <img :src="userStore.data?.user?.avatar || logoAvatar" />
-        <div class="account-box--info">
-          <span>{{ userStore.data?.user?.userName }}</span>
-          <span>{{ userStore.data?.user?.email }}</span>
-        </div>
-      </div>
-      <div class="account-box--out">
-        <button @click.stop="outLogin">退出登录</button>
-      </div>
-    </div>
-    <div class="account-box--edit">
-      <div class="form-group form-group--file">
-        <label for="cover" class="form-label">头像</label>
-        <FileUpload
-          v-if="!form.coverUrl"
-          ref="coverUrlRef"
-          v-model="form.coverUrl"
-          accept="image/*"
-          max-size="1"
-          :required="true"
-          label="Select Cover"
-          @file-selected="(file: File) => handleFile(file, 'coverUrl')"
-        />
-        <div v-else class="file-info">
-          {{ form.coverUrl.name }}
-          <button type="button" class="remove-file" @click="removeFile('coverUrl')">
-            <img :src="closeIcon" />
-          </button>
-        </div>
-        <input
-          v-model="form.userName"
-          type="text"
-          class="delete-search-input"
-          placeholder="用户名"
-        />
-        <input v-model="form.desc" type="text" class="delete-search-input" placeholder="签名" />
-        <input v-model="form.sex" type="text" class="delete-search-input" placeholder="性别" />
-        <input
-          v-model="form.birthday"
-          type="text"
-          class="delete-search-input"
-          placeholder="出生年月"
-        />
-      </div>
-      <button class="submit" @click="submit">提交</button>
-    </div>
-  </div>
-</template>
-
 <style scoped lang="scss">
 .account-box {
   &--header {
@@ -158,6 +156,9 @@ const outLogin = async () => {
     .form-group--file {
       display: flex;
       flex-direction: column;
+      img {
+        width: 32px;
+      }
       & > div {
         display: flex;
         flex-direction: column;

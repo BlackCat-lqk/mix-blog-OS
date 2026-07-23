@@ -1,4 +1,45 @@
 <!-- * @description: 系统设置 — 个性化壁纸、用户登录、侧边栏导航 -->
+<template>
+  <div class="index__view">
+    <div class="index__view--menu">
+      <!-- 帐号区域：点击弹出登录 -->
+      <div
+        class="index__view--account"
+        @click="openLoginModal"
+        role="button"
+        tabindex="0"
+        aria-label="打开登录窗口"
+        @keydown.enter="openLoginModal"
+        @keydown.space.prevent="openLoginModal"
+      >
+        <div class="index__view--avatar">
+          <img :src="userStore.data?.user?.avatar || userIcon" />
+        </div>
+        <span class="index__view--username">{{ username }}</span>
+      </div>
+      <!-- 侧边菜单栏 -->
+      <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
+    </div>
+    <!-- 右侧内容区域 -->
+    <div class="index__view--content">
+      <OverlayScrollbarsComponent
+        defer
+        style="flex: 1"
+        :options="{
+          scrollbars: {
+            autoHide: 'move',
+            autoHideDelay: 100,
+          },
+        }"
+      >
+        <PersonalizationView v-if="focusMenuIdx == 0"></PersonalizationView>
+        <AccountView v-else-if="focusMenuIdx == 1"></AccountView>
+      </OverlayScrollbarsComponent>
+    </div>
+  </div>
+  <!-- 登录弹窗 -->
+  <Login :visible="showLoginModal" @login-status="loginStatus" @close="closeLogin"></Login>
+</template>
 <script lang="ts" setup>
 import { ref, computed, watch } from "vue";
 import SideMenu from "@/components/SidebarMenu.vue";
@@ -9,8 +50,7 @@ import AccountView from "./components/AccountView.vue";
 import Login from "@/views/Login/IndexView.vue";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
-import closeIcon from "@/assets/icons/close-light.svg";
-import logoAvatar from "@/assets/icons/logo-dark.svg";
+import userIcon from "@/assets/icons/user.svg";
 interface MenuList {
   name: string;
   icon: string;
@@ -32,7 +72,7 @@ const openLoginModal = () => {
   showLoginModal.value = true;
 };
 
-const closeLoginModal = () => {
+const closeLogin = () => {
   showLoginModal.value = false;
 };
 
@@ -77,62 +117,6 @@ watch(
   { immediate: true },
 );
 </script>
-
-<template>
-  <div class="index__view">
-    <div class="index__view--menu">
-      <!-- 帐号区域：点击弹出登录 -->
-      <div
-        class="index__view--account"
-        @click="openLoginModal"
-        role="button"
-        tabindex="0"
-        aria-label="打开登录窗口"
-        @keydown.enter="openLoginModal"
-        @keydown.space.prevent="openLoginModal"
-      >
-        <div class="index__view--avatar">
-          <img :src="userStore.data?.user?.avatar || logoAvatar" />
-        </div>
-        <span class="index__view--username">{{ username }}</span>
-      </div>
-      <!-- 侧边菜单栏 -->
-      <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
-    </div>
-    <!-- 右侧内容区域 -->
-    <div class="index__view--content">
-      <OverlayScrollbarsComponent
-        defer
-        style="flex: 1"
-        :options="{
-          scrollbars: {
-            autoHide: 'move',
-            autoHideDelay: 100,
-          },
-        }"
-      >
-        <PersonalizationView v-if="focusMenuIdx == 0"></PersonalizationView>
-        <AccountView v-else-if="focusMenuIdx == 1"></AccountView>
-      </OverlayScrollbarsComponent>
-    </div>
-
-    <!-- 登录弹窗 -->
-    <Teleport to="body">
-      <Transition name="login-modal">
-        <div v-if="showLoginModal" class="login-modal__overlay">
-          <div class="login-modal__card-wrapper">
-            <!-- 关闭按钮 -->
-            <button class="login-modal__close" @click="closeLoginModal" type="button">
-              <img :src="closeIcon" />
-            </button>
-            <Login @login-status="loginStatus"></Login>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-  </div>
-</template>
-
 <style scoped lang="scss">
 .index__view {
   display: flex;
@@ -180,6 +164,10 @@ watch(
     background: #fff;
     overflow: hidden;
     padding: 5px;
+    img {
+      width: 32px;
+      height: 32px;
+    }
   }
 
   // ---- 用户名 ----
@@ -199,67 +187,6 @@ watch(
     justify-content: center;
     overflow: auto;
     padding: 10px;
-  }
-}
-
-// ============================================================================
-// 登录弹窗
-// ============================================================================
-
-.login-modal {
-  // ---- overlay ----
-  &__overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-
-  // ---- card wrapper ----
-  &__card-wrapper {
-    position: relative;
-    width: 100%;
-    max-width: 420px;
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 20px;
-  }
-
-  // ---- 关闭按钮 ----
-  &__close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border: none;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    cursor: pointer;
-    transform: rotate(-90deg);
-    transition:
-      background 150ms ease,
-      color 150ms ease,
-      transform 150ms ease;
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-      transform: rotate(90deg);
-      transition: 0.2s all;
-    }
-    img {
-      width: 24px;
-      height: 24px;
-    }
   }
 }
 </style>

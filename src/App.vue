@@ -1,6 +1,6 @@
 <!-- * @description: 根组件 — 桌面、应用窗口管理、任务栏 -->
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import appConfig from "@/config/index";
 import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
@@ -10,9 +10,12 @@ import XTools from "@/views/XTools/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
+import maxAiIcon from "@/assets/mixAI/ello-mixai.svg";
+import gsap from "gsap";
 
 const store = useWallpaperStore();
-
+// maxAi gsap动画
+const maxAiRef = ref(null);
 const showWindow = ref(false);
 const activeApp = ref<Array<AppItem>>([]);
 const focusWindow = ref<string | number>("");
@@ -76,6 +79,7 @@ const handleMinimize = (app: AppItem) => {
   }
   minimizeWindow.value.push(app.enName);
 };
+
 watch(
   () => store.initialized,
   (ready) => {
@@ -84,6 +88,22 @@ watch(
     }
   },
 );
+
+// gsap动画
+const animationInit = () => {
+  if (!maxAiRef.value) return;
+  gsap.from(maxAiRef.value, { x: 100, fill: "blue" });
+  gsap.to(maxAiRef.value, {
+    rotation: 360,
+    repeat: -1,
+    duration: 5,
+    ease: "bounce.out",
+  });
+};
+
+onMounted(() => {
+  animationInit();
+});
 </script>
 
 <template>
@@ -143,7 +163,9 @@ watch(
           </div>
         </button>
       </div>
-      <div class="taskbar__right"></div>
+      <div class="taskbar__right">
+        <img ref="maxAiRef" :src="maxAiIcon" />
+      </div>
     </div>
   </div>
 </template>
@@ -242,7 +264,7 @@ $gap: 20px;
     align-items: center;
     height: 100%;
     img {
-      height: 100%;
+      height: 80%;
     }
   }
 
@@ -255,8 +277,15 @@ $gap: 20px;
 
   &__right {
     width: 100px;
+    height: 100%;
     text-align: right;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    img {
+      height: 80%;
+    }
   }
 }
 
