@@ -1,12 +1,6 @@
-<script lang="ts">
-export interface WindowSidebarItem {
-  id: string
-  name: string
-  icon: string
-}
-</script>
-
 <script setup lang="ts">
+import type { WindowSidebarItem } from '@/tsInterface/index'
+
 withDefaults(defineProps<{ items: readonly WindowSidebarItem[]; label?: string }>(), {
   label: '应用导航',
 })

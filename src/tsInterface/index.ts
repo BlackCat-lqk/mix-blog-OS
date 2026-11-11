@@ -29,3 +29,42 @@ export interface AppItem {
   icon?: string
   component: Component
 }
+
+export interface DesktopWindow {
+  id: string
+  minimized: boolean
+  zIndex: number
+}
+
+export interface SidebarApp {
+  id: string
+  name: string
+  icon?: string
+  minimized: boolean
+}
+
+export interface WindowSidebarItem {
+  id: string
+  name: string
+  icon: string
+}
+
+export interface WindowBounds {
+  left: number
+  top: number
+  width: number
+  height: number
+}
+
+export interface SettingsNavigation {
+  section: string
+}
+
+export interface WallpaperData {
+  current: string
+  history: string[]
+}
+
+export interface FileUploadEmits {
+  (e: 'file-selected', file: File): void
+}

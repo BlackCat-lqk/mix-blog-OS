@@ -7,14 +7,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { FileUploadEmits } from '@/tsInterface/index'
 
 const fileInput = ref<HTMLInputElement | null>(null)
 
-interface Emits {
-  (e: 'file-selected', file: File): void
-}
-
-const emit = defineEmits<Emits>()
+const emit = defineEmits<FileUploadEmits>()
 
 const handleClick = () => {
   fileInput.value?.click()

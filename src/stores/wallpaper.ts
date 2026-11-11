@@ -1,14 +1,10 @@
 import { ref, watch } from "vue";
 import { defineStore } from "pinia";
+import type { WallpaperData } from "@/tsInterface/index";
 
 const DB_NAME = "wallpaper-db";
 const STORE_NAME = "wallpaper";
 const DB_VERSION = 1;
-
-interface WallpaperData {
-  current: string;
-  history: string[];
-}
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

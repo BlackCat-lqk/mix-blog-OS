@@ -2,14 +2,15 @@
 <script setup lang="ts">
 import { ref, computed, watch, defineAsyncComponent } from 'vue'
 import OsWindow from '@/components/OsWindow/index.vue'
-import WindowSidebar, { type WindowSidebarItem } from '@/components/OsWindow/WindowSidebar.vue'
+import WindowSidebar from '@/components/OsWindow/WindowSidebar.vue'
+import type { SettingsNavigation, WindowSidebarItem } from '@/tsInterface/index'
 import personalizationIcon from '@/assets/setting/icons/personalization.svg'
 import accountIcon from '@/assets/setting/icons/user-solid.svg'
 import PersonalizationView from './components/PersonalizationView.vue'
 import { useUserInfoStore } from '@/stores/userInfo.ts'
 import userIcon from '@/assets/icons/user.svg'
 
-defineProps<{ title?: string; icon?: string }>()
+const props = defineProps<{ title?: string; icon?: string; navigation?: SettingsNavigation }>()
 const emit = defineEmits<{ close: []; activate: [] }>()
 const minimized = defineModel<boolean>('minimized', { default: false })
 const userStore = useUserInfoStore()
@@ -30,6 +31,16 @@ watch(
   () => userStore.data?.user.isLogin,
   (loggedIn) => {
     selectedMenu.value = loggedIn ? 'account' : 'personalization'
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.navigation,
+  (navigation) => {
+    if (navigation && menuList.value.some((item) => item.id === navigation.section)) {
+      selectedMenu.value = navigation.section
+    }
   },
   { immediate: true },
 )
@@ -65,7 +76,7 @@ watch(
       <PersonalizationView v-if="selectedMenu === 'personalization'" />
     </div>
     <Login
-      v-if="showLoginModal"
+      v-if="showLoginModal && !minimized"
       :visible="showLoginModal"
       @login-status="showLoginModal = !$event"
       @close="showLoginModal = false"

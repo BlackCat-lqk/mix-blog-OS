@@ -1,4 +1,5 @@
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, inject, onUnmounted } from 'vue'
+import { windowBoundsKey } from './windowBounds'
 
 let cascadeIndex = 0
 const CASCADE_OFFSET = 30
@@ -8,6 +9,15 @@ const getCascadeOffset = () => (cascadeIndex++ % CASCADE_MAX) * CASCADE_OFFSET
 
 /** 只管理窗口位置、尺寸及拖拽/缩放交互，不依赖应用内容。 */
 export function useWindowGeometry() {
+  const bounds = inject(
+    windowBoundsKey,
+    computed(() => ({
+      left: 0,
+      top: 0,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    })),
+  )
   const MIN_WIDTH = 350
   const MIN_HEIGHT = 320
   const MIN_VISIBLE = 150
@@ -16,18 +26,23 @@ export function useWindowGeometry() {
   const isMaximized = ref(false)
 
   // ---- position & size ----
-  const width = ref(960)
-  const height = ref(540)
+  const width = ref(Math.min(960, Math.max(MIN_WIDTH, bounds.value.width)))
+  const height = ref(Math.min(540, Math.max(MIN_HEIGHT, bounds.value.height)))
   const offset = getCascadeOffset()
   // 首次渲染前确定位置，避免挂载后再移动窗口。
   const left = ref(
     Math.min(
-      window.innerWidth - MIN_VISIBLE,
-      Math.max(0, (window.innerWidth - width.value) / 2) + offset,
+      bounds.value.left + bounds.value.width - MIN_VISIBLE,
+      bounds.value.left + Math.max(0, (bounds.value.width - width.value) / 2) + offset,
     ),
   )
-  const top = ref(Math.max(0, (window.innerHeight - height.value) / 2) + offset)
-  const savedRect = ref({ left: left.value, top: top.value, width: width.value, height: height.value })
+  const top = ref(bounds.value.top + Math.max(0, (bounds.value.height - height.value) / 2) + offset)
+  const savedRect = ref({
+    left: left.value,
+    top: top.value,
+    width: width.value,
+    height: height.value,
+  })
 
   // ---- drag state ----
   const dragging = ref(false)
@@ -56,19 +71,20 @@ export function useWindowGeometry() {
 
   // ---- clamp helpers ----
   const clampLeft = (value: number) => {
+    // 普通窗口可穿过状态栏，并在屏幕左侧保留可操作区域。
     const minLeft = -width.value + MIN_VISIBLE
-    const maxLeft = window.innerWidth - MIN_VISIBLE
+    const maxLeft = bounds.value.left + Math.max(0, bounds.value.width - MIN_VISIBLE)
     return Math.max(minLeft, Math.min(maxLeft, value))
   }
 
-  const clampTop = (value: number) => Math.max(0, value)
+  const clampTop = (value: number) => Math.max(bounds.value.top, value)
 
   const windowStyle = computed(() => {
     if (isMaximized.value) {
       return {
-        transform: 'none',
-        width: '100vw',
-        height: '100vh',
+        transform: `translate(${bounds.value.left}px, ${bounds.value.top}px)`,
+        width: `${bounds.value.width}px`,
+        height: `${bounds.value.height}px`,
       }
     }
     return {
@@ -168,16 +184,18 @@ export function useWindowGeometry() {
       if (dy <= RESTORE_THRESHOLD) return
 
       const s = savedRect.value
-      const ratioX = dragStartX.value / window.innerWidth
+      const ratioX = (dragStartX.value - bounds.value.left) / bounds.value.width
 
       width.value = s.width
       height.value = s.height
-      left.value = clampLeft(dragStartX.value - s.width * ratioX)
-      top.value = clampTop(dragStartY.value - 8)
+      left.value = clampLeft(e.clientX - s.width * ratioX)
+      top.value = clampTop(e.clientY - (dragStartY.value - bounds.value.top))
 
       isMaximized.value = false
       pendingRestore.value = false
       dragging.value = true
+      dragStartX.value = e.clientX
+      dragStartY.value = e.clientY
       winStartLeft.value = left.value
       winStartTop.value = top.value
       return
@@ -223,9 +241,9 @@ export function useWindowGeometry() {
       if (!n && nh < MIN_HEIGHT) nh = MIN_HEIGHT
 
       // enforce boundary: keep titlebar visible
-      if (nt < 0) {
-        if (n) nh += nt
-        nt = 0
+      if (nt < bounds.value.top) {
+        if (n) nh += nt - bounds.value.top
+        nt = bounds.value.top
       }
       if (nl < 0) {
         if (w) nw += nl
@@ -257,7 +275,7 @@ export function useWindowGeometry() {
 
     if (dragging.value) {
       // 鼠标拖出屏幕顶部 → 自动最大化（仅在窗口确实被拖拽移动过时触发）
-      if (hasMoved && lastMouseY <= 0 && !isMaximized.value) {
+      if (hasMoved && lastMouseY <= bounds.value.top && !isMaximized.value) {
         savedRect.value = {
           left: winStartLeft.value,
           top: winStartTop.value,
@@ -267,7 +285,7 @@ export function useWindowGeometry() {
         isMaximized.value = true
       }
       // 拖到底部 → 弹回，保证标题栏始终可见
-      const maxTop = window.innerHeight - TITLEBAR_VISIBLE
+      const maxTop = bounds.value.top + bounds.value.height - TITLEBAR_VISIBLE
       if (top.value > maxTop) {
         top.value = Math.max(0, maxTop)
       }
