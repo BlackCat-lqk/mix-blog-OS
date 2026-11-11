@@ -6,10 +6,11 @@ import { visualizer } from "rollup-plugin-visualizer";
 import viteCompression from "vite-plugin-compression";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command, mode }) => ({
   plugins: [
     vue(),
-    vueDevTools(),
+    // 调试面板按需开启，避免开发首页额外加载数 MB 的调试脚本。
+    command === "serve" && mode === "devtools" && vueDevTools(),
     // Gzip 预压缩（nginx 可直接 serve .gz 文件）
     viteCompression({
       algorithm: "gzip",
@@ -44,4 +45,4 @@ export default defineConfig({
       interval: 100,
     },
   },
-});
+}));

@@ -1,169 +1,74 @@
-<!-- * @description: 根组件 — 桌面、应用窗口管理、任务栏 -->
+<!-- 根组件只负责桌面及应用的打开、恢复、层级与关闭。 -->
+<template>
+  <main class="home" :style="store.initialized && store.current ? { backgroundImage: 'url(' + store.current + ')' } : {}
+    ">
+    <div class="desktop">
+      <div class="desktop-app">
+        <button v-for="app in appConfig" :key="app.enName" class="app-item" type="button"
+          @dblclick="openApp(app)" @keydown.enter.prevent="openApp(app)" @keydown.space.prevent="openApp(app)">
+          <img :src="app.icon" alt="" width="36" height="36" />
+          <span class="app-item__title">{{ app.zhName }}</span>
+        </button>
+      </div>
+    </div>
+
+    <component :is="app.component" v-for="(app, index) in activeApps" :key="app.enName"
+      v-model:minimized="app.minimized" :title="app.zhName" :icon="app.icon" :style="{ zIndex: index + 1 }"
+      @activate="focusApp(app.enName)" @close="closeApp(app.enName)" />
+  </main>
+</template>
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import appConfig from "@/config/index";
-import OsWindow from "./components/OsWindow.vue";
-import Setting from "@/views/Setting/IndexView.vue";
-import type { AppItem } from "./types/interface.ts";
-import { useWallpaperStore } from "@/stores/wallpaper";
-import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
+import { ref, watch } from 'vue'
+import appConfig from '@/config/index'
+import type { AppItem } from "@/tsInterface/index"
+import { useWallpaperStore } from '@/stores/wallpaper'
+import defaultWallpaper1 from '@/assets/setting/images/wallpaper/default-wallpaper1.jpg'
 
-const store = useWallpaperStore();
-const activeApp = ref<Array<AppItem>>([]);
-const focusWindow = ref<string | number>("");
-const minimizeWindow = ref<Array<string | number>>([]);
-// 记录每个应用任务栏图标的屏幕坐标，用于最小化动画目标
-const minimizeTarget = ref<Record<string, { x: number; y: number }>>({});
+const store = useWallpaperStore()
+const activeApps = ref<Array<AppItem & { minimized: boolean }>>([])
 
-const toggleMinimized = (app: AppItem) => {
-  // 是否已经显示，已经显示就给最小化，没有就取消
-  if (minimizeWindow.value.includes(app.enName)) {
-    minimizeWindow.value = minimizeWindow.value.filter((item) => item != app.enName);
-  } else {
-    // 只有当focusWindow==app.enName时，才会最小化，否则将只是移到最顶层
-    if (focusWindow.value == app.enName) {
-      minimizeWindow.value.push(app.enName);
-    } else {
-      focusWindow.value = app.enName;
-    }
+// 数组顺序就是窗口层级，避免单独维护焦点和最小化名单。
+const focusApp = (id: string) => {
+  const index = activeApps.value.findIndex((item) => item.enName === id)
+  if (index < 0 || index === activeApps.value.length - 1) return
+  const [app] = activeApps.value.splice(index, 1)
+  if (app) activeApps.value.push(app)
+}
+
+const openApp = (app: AppItem) => {
+  const existing = activeApps.value.find((item) => item.enName === app.enName)
+  if (existing) {
+    existing.minimized = false
+    focusApp(app.enName)
+    return
   }
-};
+  activeApps.value.push({ ...app, minimized: false })
+}
 
-// 双击应用
-const handleClickApp = (app: AppItem) => {
-  // 应用是否已打开
-  if (activeApp.value.some((item) => item.enName === app.enName)) {
-    if (minimizeWindow.value.includes(app.enName)) {
-      // 应用处于最小化状态
-      toggleMinimized(app);
-    } else {
-      // 应用处于活跃状态
-      focusWindow.value = app.enName;
-    }
-    return;
-  }
-  activeApp.value.push(app);
-  // 焦点窗口设置为最新打开的窗口，保持层级最大
-  focusWindow.value = app.enName;
-};
-
-// 点击应用的窗口
-const clickWindow = (app: AppItem) => {
-  focusWindow.value = app.enName;
-};
-
-// 关闭应用：先触发关闭动画，后移除
-const handleCloseApp = (app: AppItem) => {
-  activeApp.value = activeApp.value.filter((item) => item.enName !== app.enName);
-};
-
-// 最小化应用
-const handleMinimize = (app: AppItem) => {
-  // 记录任务栏图标位置，用于窗口向图标收缩的动画
-  const dockEl = document.querySelector(`[data-app-dock="${app.enName}"]`);
-  if (dockEl) {
-    const rect = dockEl.getBoundingClientRect();
-    minimizeTarget.value[app.enName] = {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    };
-  }
-  minimizeWindow.value.push(app.enName);
-};
+const closeApp = (id: string) => {
+  activeApps.value = activeApps.value.filter((item) => item.enName !== id)
+}
 
 watch(
   () => store.initialized,
   (ready) => {
     if (ready && !store.current) {
-      store.setDefaultWallpaper(defaultWallpaper1);
+      store.setDefaultWallpaper(defaultWallpaper1)
     }
   },
-);
+)
 </script>
 
-<template>
-  <div
-    class="home"
-    :style="store.initialized && store.current ? { backgroundImage: `url(${store.current})` } : {}"
-  >
-    <!-- 桌面区域 -->
-    <div class="desktop">
-      <div class="desktop-app">
-        <div
-          v-for="(app, idx) in appConfig"
-          :key="idx"
-          class="app-item"
-          @dblclick="handleClickApp(app)"
-        >
-          <img :src="app.icon" alt="" />
-          <span class="app-item__title">{{ app.zhName }}</span>
-        </div>
-      </div>
-    </div>
-
-    <OsWindow
-      v-for="(app, idx) in activeApp"
-      :key="idx"
-      @minimize="handleMinimize(app)"
-      :title="app.zhName"
-      :icon="app.icon"
-      @close="handleCloseApp(app)"
-      @click="clickWindow(app)"
-      @mousedown="clickWindow(app)"
-      :style="{ zIndex: focusWindow === app.enName ? 999 : undefined }"
-      :minimized="minimizeWindow.includes(app.enName)"
-      :minimize-target="minimizeTarget[app.enName]"
-    >
-      <Setting v-if="app.enName === 'Setting'" />
-    </OsWindow>
-
-    <!-- 底部任务栏 -->
-    <div class="taskbar">
-      <div class="taskbar__left">
-        <img src="@/assets/icons/logo-dark.svg" />
-      </div>
-      <div class="taskbar__center">
-        <button
-          v-for="(app, idx) in activeApp"
-          :key="idx"
-          class="taskbar__item"
-          :data-app-dock="app.enName"
-          @click="toggleMinimized(app)"
-        >
-          <div class="taskbar__item-icon">
-            <img :src="app.icon" alt="icon" />
-          </div>
-        </button>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped lang="scss">
-// ---- variables ----
-$taskbar-h: 44px;
-$primary: #0078d4;
-$bg-dark: #1e1e1e;
-$taskbar-bg: rgba(255, 255, 255, 0.7);
-$text-color: #fff;
-$item-h: 80px;
-$gap: 20px;
-
 .home {
-  display: flex;
-  flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: $bg-dark;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background: #1e1e1e center / cover no-repeat;
 }
 
-// ---- 桌面 ----
 .desktop {
-  flex: 1;
   position: relative;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -171,7 +76,6 @@ $gap: 20px;
   display: flex;
   flex-wrap: wrap;
   flex-direction: column;
-  justify-content: start;
   align-content: start;
   height: 100%;
   padding: 20px;
@@ -183,13 +87,14 @@ $gap: 20px;
   flex-direction: column;
   gap: 4px;
   width: 80px;
-  height: $item-h;
+  height: 80px;
   padding: 4px;
   border: 1px solid transparent;
-  cursor: default;
-  user-select: none;
-  will-change: transform;
+  border-radius: 8px;
+  background: transparent;
   cursor: pointer;
+  user-select: none;
+
   img {
     width: 36px;
     height: 36px;
@@ -197,7 +102,7 @@ $gap: 20px;
   }
 
   &__title {
-    color: $text-color;
+    color: #fff;
     font-size: 12px;
     height: 18px;
     line-height: 18px;
@@ -205,79 +110,15 @@ $gap: 20px;
     padding: 0 4px;
     border-radius: 2px;
     pointer-events: none;
-    // 文字阴影保证在浅色壁纸下可读
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   }
+
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    border-radius: 8px;
-  }
-}
-
-// ---- 任务栏 ----
-.taskbar {
-  display: flex;
-  align-items: center;
-  height: $taskbar-h;
-  padding: 0 12px;
-  background: $taskbar-bg;
-  border-top: 1px solid #a0a4a8;
-  flex-shrink: 0;
-  user-select: none;
-  backdrop-filter: blur(10px);
-  &__left {
-    width: 160px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    img {
-      height: 80%;
-    }
   }
 
-  &__center {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
+  &:focus-visible {
+    outline: 2px solid #fff;
   }
-}
-
-.taskbar__item {
-  padding: 4px;
-  border: none;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.06);
-  color: #ccc;
-  cursor: pointer;
-  transition: background 0.15s;
-  &:hover {
-    background: rgba(0, 0, 0, 0.12);
-  }
-
-  &--active {
-    background: rgba(0, 120, 212, 1);
-    color: #fff;
-  }
-
-  &--minimized {
-    opacity: 0.6;
-  }
-}
-
-.taskbar__item-icon {
-  width: 24px;
-  img {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.taskbar__item-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 </style>

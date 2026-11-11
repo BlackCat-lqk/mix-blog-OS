@@ -1,85 +1,81 @@
 <!--
   Login IndexView — 登录页主入口
-  全屏暗色背景 + 毛玻璃卡片 + 登录表单
+  全屏暗色遮罩 + 登录卡片 + 登录表单
 -->
 <template>
   <Teleport to="body">
-    <Transition>
-      <div v-if="props.visible" class="login-modal__overlay">
-        <div class="login-modal__card-wrapper">
-          <!-- 关闭按钮 -->
-          <button class="login-modal__close" type="button" @click="close">
-            <img :src="closeIcon" />
-          </button>
-          <div class="login-card">
-            <!-- 品牌区域 -->
-            <div class="login-card__brand">
-              <!-- Logo：抽象 OS 图标 -->
-              <div class="login-card__logo" aria-hidden="true">
-                <img :src="logoIcon" alt="logo" />
-              </div>
+    <div v-if="props.visible" class="login-modal__overlay">
+      <div class="login-modal__card-wrapper">
+        <!-- 关闭按钮 -->
+        <button class="login-modal__close" type="button" @click="close">
+          <img :src="closeIcon" />
+        </button>
+        <div class="login-card">
+          <!-- 品牌区域 -->
+          <div class="login-card__brand">
+            <!-- Logo：抽象 OS 图标 -->
+            <div class="login-card__logo" aria-hidden="true">
+              <img :src="logoIcon" alt="logo" />
             </div>
-            <!-- 表单 -->
-            <div class="login-card__body">
-              <form
-                class="login-form"
-                @submit.prevent="handleSubmit"
-                @keydown="onKeydown"
-                novalidate
-              >
-                <!-- 帐号 -->
-                <LoginInput
-                  v-model="account"
-                  label="邮箱账号"
-                  type="text"
-                  placeholder="请输入邮箱帐号"
-                  :error="accountError"
-                  :disabled="loading"
-                  :icon="iconAccount"
-                />
-                <!-- 密码 -->
-                <LoginInput
-                  v-model="password"
-                  label="密码"
-                  type="password"
-                  placeholder="请输入密码"
-                  :error="passwordError"
-                  :disabled="loading"
-                  :icon="iconPassword"
-                />
-                <div class="login-register">
-                  <!-- 注册按钮 -->
-                  <button type="button" class="login-form__register" @click.stop="register">
-                    <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }"
-                      >注 册</span
-                    >
-                  </button>
-                  <!-- 提交按钮 -->
-                  <button
-                    v-loading="loading"
-                    type="submit"
-                    class="login-form__submit"
-                    :class="{ 'login-form__submit--loading': loading }"
-                    :disabled="!canSubmit"
+          </div>
+          <!-- 表单 -->
+          <div class="login-card__body">
+            <form
+              class="login-form"
+              @submit.prevent="handleSubmit"
+              @keydown="onKeydown"
+              novalidate
+            >
+              <!-- 帐号 -->
+              <LoginInput
+                v-model="account"
+                label="邮箱账号"
+                type="text"
+                placeholder="请输入邮箱帐号"
+                :error="accountError"
+                :disabled="loading"
+                :icon="iconAccount"
+              />
+              <!-- 密码 -->
+              <LoginInput
+                v-model="password"
+                label="密码"
+                type="password"
+                placeholder="请输入密码"
+                :error="passwordError"
+                :disabled="loading"
+                :icon="iconPassword"
+              />
+              <div class="login-register">
+                <!-- 注册按钮 -->
+                <button type="button" class="login-form__register" @click.stop="register">
+                  <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }"
+                    >注 册</span
                   >
-                    <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }"
-                      >登 录</span
-                    >
-                  </button>
-                </div>
-              </form>
-            </div>
+                </button>
+                <!-- 提交按钮 -->
+                <button
+                  type="submit"
+                  class="login-form__submit"
+                  :class="{ 'login-form__submit--loading': loading }"
+                  :disabled="!canSubmit"
+                >
+                  <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }"
+                    >登 录</span
+                  >
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-    </Transition>
+    </div>
   </Teleport>
 </template>
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
 import logoIcon from "@/assets/icons/logo-light.svg";
-import { Message } from "@/utils/message";
 import { loginUserApi, registerUserApi } from "@/server/user.ts";
 import iconAccount from "@/assets/icons/account-light.svg";
 import iconPassword from "@/assets/icons/password-light.svg";
@@ -99,7 +95,6 @@ const userInfoStore = useUserInfoStore();
 const account = ref("");
 const password = ref("");
 const loading = ref(false);
-const serverError = ref("");
 
 // ---- 字段级错误 ----
 const accountError = ref("");
@@ -111,7 +106,6 @@ const MIN_PASSWORD_LEN = 4;
 const validate = (): boolean => {
   accountError.value = "";
   passwordError.value = "";
-  serverError.value = "";
 
   let valid = true;
 
@@ -138,7 +132,6 @@ const handleSubmit = async () => {
   if (!validate()) return;
 
   loading.value = true;
-  serverError.value = "";
 
   try {
     const data = await loginUserApi({
@@ -149,31 +142,14 @@ const handleSubmit = async () => {
     if (res.code === 200 && res.data) {
       userInfoStore.setUserInfo(res.data);
       userInfoStore.setAuthStatus(true);
-      Message.success(res.message, {
-        duration: 3000,
-        position: "top",
-        maxToasts: 1,
-      });
       emit("loginStatus", true);
       emit("update:visible", false);
       emit("close", false);
     } else {
-      serverError.value = res.message || "登录失败，请重试";
-      Message.error(serverError.value, {
-        duration: 5000,
-        position: "top",
-        maxToasts: 3,
-      });
       userInfoStore.removeUserInfo();
       emit("loginStatus", false);
     }
-  } catch (e) {
-    const error = e as Error;
-    Message.error(error.message || "网络异常，请稍后再试", {
-      duration: 5000,
-      position: "top",
-      maxToasts: 3,
-    });
+  } catch {
     userInfoStore.removeUserInfo();
     emit("loginStatus", false);
   } finally {
@@ -197,14 +173,9 @@ const register = async () => {
       email: account.value.trim(),
       password: password.value,
     };
-    const data = await registerUserApi(params);
-    const res = data.data;
-    if (res.code === 200) {
-      Message.success(res.message);
-    }
-  } catch (e) {
-    const error = e as Error;
-    Message.error(error.message);
+    await registerUserApi(params);
+  } catch {
+    return;
   }
 };
 
@@ -219,7 +190,7 @@ const close = () => {
 </script>
 <style scoped lang="scss">
 // 公共变量
-$card-bg: rgba(0, 0, 0, 0.85);
+$card-bg: #181818;
 $card-border: rgba(255, 255, 255, 0.1);
 $card-shadow:
   0 0 0 1px rgba(255, 255, 255, 0.05),
@@ -245,8 +216,6 @@ $radius: 10px;
   border-radius: $mainRadius;
   border: 1px solid $card-border;
   background: $card-bg;
-  backdrop-filter: blur(40px) saturate(1.5);
-  -webkit-backdrop-filter: blur(40px) saturate(1.5);
   box-shadow: $card-shadow;
 
   // ---- 品牌区域 ----
@@ -292,10 +261,6 @@ $radius: 10px;
     letter-spacing: 0.08em;
     cursor: pointer;
     user-select: none;
-    transition:
-      background 200ms ease,
-      transform 150ms ease,
-      box-shadow 200ms ease;
 
     &:hover:not(:disabled) {
       background: $primary-hover;
@@ -304,7 +269,6 @@ $radius: 10px;
 
     &:active:not(:disabled) {
       background: $primary-active;
-      transform: scale(0.98);
     }
 
     &:focus-visible {
@@ -336,8 +300,6 @@ $radius: 10px;
     justify-content: center;
     padding: 24px;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
   }
 
   // ---- card wrapper ----
@@ -365,15 +327,8 @@ $radius: 10px;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.08);
     cursor: pointer;
-    transform: rotate(-90deg);
-    transition:
-      background 150ms ease,
-      color 150ms ease,
-      transform 150ms ease;
     &:hover {
       background: rgba(255, 255, 255, 0.15);
-      transform: rotate(90deg);
-      transition: 0.2s all;
     }
     img {
       width: 24px;

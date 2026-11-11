@@ -53,7 +53,6 @@
 </template>
 <script lang="ts" setup>
 import { reactive } from "vue";
-import { Message } from "@/utils/message";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
 import { logOutUserApi, updateUsersInfoApi } from "@/server/user";
 import closeIcon from "@/assets/icons/close.svg";
@@ -90,14 +89,9 @@ const submit = async () => {
     formData.append("desc", form.desc);
     formData.append("sex", form.sex || "");
     formData.append("birthday", form.birthday);
-    const data = await updateUsersInfoApi(formData);
-    const res = data.data;
-    if (res.code === 200 && res.data) {
-      Message.success("更新成功");
-    }
-  } catch (e) {
-    const error = e as Error;
-    Message.error(error.message);
+    await updateUsersInfoApi(formData);
+  } catch {
+    return;
   }
 };
 // 退出登录
@@ -107,13 +101,9 @@ const outLogin = async () => {
     const res = data.data;
     if (res.code === 200) {
       userStore.removeUserInfo();
-      Message.success(res.message || "退出成功");
-    } else {
-      Message.error("退出失败");
     }
-  } catch (e) {
-    const error = e as Error;
-    Message.error(error.message || "退出失败");
+  } catch {
+    return;
   }
 };
 </script>

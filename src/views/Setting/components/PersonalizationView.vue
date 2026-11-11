@@ -2,7 +2,7 @@
 <template>
   <div class="index-personalozation__view">
     <div class="index-personalozation--preview">
-      <img v-if="store.current" :src="store.current" alt="preview" />
+      <img v-if="store.current" :src="store.current" alt="preview" decoding="async" />
       <div class="mask">
         <div class="line-box">
           <div class="line" v-for="line in 4" :key="line"></div>
@@ -16,23 +16,20 @@
     <div class="index-personalozation--default">
       <div class="title">系统壁纸</div>
       <div class="list">
-        <div class="item" @click="store.selectWallpaper(defaultWallpaper1)">
-          <img :src="defaultWallpaper1" alt="item" />
-        </div>
-        <div class="item" @click="store.selectWallpaper(defaultWallpaper2)">
-          <img :src="defaultWallpaper2" alt="item" />
-        </div>
-        <div class="item" @click="store.selectWallpaper(defaultWallpaper3)">
-          <img :src="defaultWallpaper3" alt="item" />
-        </div>
-        <div class="item" @click="store.selectWallpaper(defaultWallpaper5)">
-          <img :src="defaultWallpaper5" alt="item" />
-        </div>
-        <div class="item" @click="store.selectWallpaper(defaultWallpaper6)">
-          <img :src="defaultWallpaper6" alt="item" />
-        </div>
-        <div class="item" @click="store.selectWallpaper(defaultWallpaper7)">
-          <img :src="defaultWallpaper7" alt="item" />
+        <div
+          v-for="wallpaper in wallpapers"
+          :key="wallpaper.full"
+          class="item"
+          @click="store.selectWallpaper(wallpaper.full)"
+        >
+          <img
+            :src="wallpaper.thumbnail"
+            alt="item"
+            width="160"
+            height="90"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
     </div>
@@ -46,7 +43,7 @@
           :class="{ active: store.current === img }"
           @click="store.selectWallpaper(img)"
         >
-          <img :src="img" alt="" />
+          <img :src="img" alt="" width="160" height="90" loading="lazy" decoding="async" />
         </div>
         <span v-if="!store.history.length" class="index-personalozation--history--empty"
           >暂无历史记录</span
@@ -78,6 +75,22 @@ import defaultWallpaper3 from "@/assets/setting/images/wallpaper/default-wallpap
 import defaultWallpaper5 from "@/assets/setting/images/wallpaper/default-wallpaper5.jpg";
 import defaultWallpaper6 from "@/assets/setting/images/wallpaper/default-wallpaper6.jpg";
 import defaultWallpaper7 from "@/assets/setting/images/wallpaper/default-wallpaper7.jpg";
+import thumbnail1 from "@/assets/setting/images/wallpaper/thumbnails/default-wallpaper1.jpg";
+import thumbnail2 from "@/assets/setting/images/wallpaper/thumbnails/default-wallpaper2.jpg";
+import thumbnail3 from "@/assets/setting/images/wallpaper/thumbnails/default-wallpaper3.jpg";
+import thumbnail5 from "@/assets/setting/images/wallpaper/thumbnails/default-wallpaper5.jpg";
+import thumbnail6 from "@/assets/setting/images/wallpaper/thumbnails/default-wallpaper6.jpg";
+import thumbnail7 from "@/assets/setting/images/wallpaper/thumbnails/default-wallpaper7.jpg";
+
+// 列表只解码缩略图，选中后才加载原图作为桌面壁纸。
+const wallpapers = [
+  { full: defaultWallpaper1, thumbnail: thumbnail1 },
+  { full: defaultWallpaper2, thumbnail: thumbnail2 },
+  { full: defaultWallpaper3, thumbnail: thumbnail3 },
+  { full: defaultWallpaper5, thumbnail: thumbnail5 },
+  { full: defaultWallpaper6, thumbnail: thumbnail6 },
+  { full: defaultWallpaper7, thumbnail: thumbnail7 },
+];
 
 const store = useWallpaperStore();
 const fileInput = ref<HTMLInputElement>();
@@ -148,8 +161,7 @@ const onFileChange = (e: Event) => {
       position: absolute;
       width: 40%;
       height: 80%;
-      background: rgba(255, 255, 255, 0.6);
-      backdrop-filter: blur(5px);
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 8px;
       top: 5%;
       right: 5%;

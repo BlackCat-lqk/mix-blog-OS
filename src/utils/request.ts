@@ -1,5 +1,4 @@
 import axios from "axios";
-import { Message } from "@/utils/message";
 
 const service = axios.create({
   baseURL: "/api",
@@ -30,7 +29,6 @@ service.interceptors.response.use(
     if (res.data.code === 200) {
       return res;
     } else {
-      Message.error(res.data.message || "未知错误");
       return Promise.reject(new Error(res.data.message || "Unknown error"));
     }
   },

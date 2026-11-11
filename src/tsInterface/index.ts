@@ -1,6 +1,7 @@
 /**
- * @description: 登录和账户设置共用的用户信息类型
+ * @description: ts接口类封装
  */
+import type { Component } from 'vue'
 export interface UserInfo {
   isLogin: boolean;
   _id: string;
@@ -19,4 +20,12 @@ export interface UserInfo {
 export interface UserData {
   token: string;
   user: UserInfo;
+}
+
+export interface AppItem {
+  zhName?: string
+  enName: string
+  title?: string
+  icon?: string
+  component: Component
 }

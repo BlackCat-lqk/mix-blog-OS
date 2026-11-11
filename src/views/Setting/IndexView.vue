@@ -1,160 +1,114 @@
-<!-- * @description: 系统设置 — 个性化壁纸、用户登录、侧边栏导航 -->
-<template>
-  <div class="index__view">
-    <div class="index__view--menu">
-      <!-- 帐号区域：点击弹出登录 -->
-      <div
-        class="index__view--account"
-        @click="openLoginModal"
-        role="button"
-        tabindex="0"
-        aria-label="打开登录窗口"
-        @keydown.enter="openLoginModal"
-        @keydown.space.prevent="openLoginModal"
-      >
-        <div class="index__view--avatar">
-          <img :src="userStore.data?.user?.avatar || userIcon" />
-        </div>
-        <span class="index__view--username">{{ username }}</span>
-      </div>
-      <!-- 侧边菜单栏 -->
-      <SideMenu :menuList="menuList" @clickMenu="clickMenu"></SideMenu>
-    </div>
-    <!-- 右侧内容区域 -->
-    <div class="index__view--content">
-      <OverlayScrollbarsComponent
-        defer
-        style="flex: 1"
-        :options="{
-          scrollbars: {
-            autoHide: 'move',
-            autoHideDelay: 100,
-          },
-        }"
-      >
-        <PersonalizationView v-if="focusMenuIdx == 0"></PersonalizationView>
-        <AccountView v-else-if="focusMenuIdx == 1"></AccountView>
-      </OverlayScrollbarsComponent>
-    </div>
-  </div>
-  <!-- 登录弹窗 -->
-  <Login :visible="showLoginModal" @login-status="loginStatus" @close="closeLogin"></Login>
-</template>
-<script lang="ts" setup>
-import { ref, computed, watch } from "vue";
-import SideMenu from "@/components/SidebarMenu.vue";
-import personalizationIcon from "@/assets/setting/icons/personalization.svg";
-import accountIcon from "@/assets/setting/icons/user-solid.svg";
-import PersonalizationView from "./components/PersonalizationView.vue";
-import AccountView from "./components/AccountView.vue";
-import Login from "@/views/Login/IndexView.vue";
-import { useUserInfoStore } from "@/stores/userInfo.ts";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
-import userIcon from "@/assets/icons/user.svg";
-interface MenuList {
-  name: string;
-  icon: string;
-}
-const menuList = ref<MenuList[]>([]);
+<!-- 设置应用负责业务状态，通过公共窗口组合导航、内容与登录弹窗。 -->
+<script setup lang="ts">
+import { ref, computed, watch, defineAsyncComponent } from 'vue'
+import OsWindow from '@/components/OsWindow/index.vue'
+import WindowSidebar, { type WindowSidebarItem } from '@/components/OsWindow/WindowSidebar.vue'
+import personalizationIcon from '@/assets/setting/icons/personalization.svg'
+import accountIcon from '@/assets/setting/icons/user-solid.svg'
+import PersonalizationView from './components/PersonalizationView.vue'
+import { useUserInfoStore } from '@/stores/userInfo.ts'
+import userIcon from '@/assets/icons/user.svg'
 
-const userStore = useUserInfoStore();
+defineProps<{ title?: string; icon?: string }>()
+const emit = defineEmits<{ close: []; activate: [] }>()
+const minimized = defineModel<boolean>('minimized', { default: false })
+const userStore = useUserInfoStore()
+const username = computed(() => userStore.data?.user?.userName || '未登录')
+const showLoginModal = ref(false)
+const Login = defineAsyncComponent(() => import('@/views/Login/IndexView.vue'))
+const selectedMenu = ref('personalization')
 
-// 从 store 读取用户名，取首字母作头像缩写
-const username = computed(() => {
-  const u = userStore.data?.user?.userName;
-  return u || "未登录";
-});
+const menuList = computed<WindowSidebarItem[]>(() => {
+  const items = [{ id: 'personalization', name: '个性化', icon: personalizationIcon }]
+  if (userStore.data?.user.isLogin) {
+    items.push({ id: 'account', name: '账户', icon: accountIcon })
+  }
+  return items
+})
 
-// ---- 登录弹窗 ----
-const showLoginModal = ref(false);
-
-const openLoginModal = () => {
-  showLoginModal.value = true;
-};
-
-const closeLogin = () => {
-  showLoginModal.value = false;
-};
-
-// ---- 菜单 ----
-const focusMenuIdx = ref(0);
-
-const clickMenu = (item: { name: string; icon: string }, index: number) => {
-  focusMenuIdx.value = index;
-};
-
-// 登录状态
-const loginStatus = (status: boolean) => {
-  showLoginModal.value = !status;
-};
-
-// 监听账户状态
 watch(
   () => userStore.data?.user.isLogin,
-  (val) => {
-    if (!val) {
-      menuList.value = [
-        {
-          name: "个性化",
-          icon: personalizationIcon,
-        },
-      ];
-      focusMenuIdx.value = 0;
-    } else {
-      menuList.value = [
-        {
-          name: "个性化",
-          icon: personalizationIcon,
-        },
-        {
-          name: "账户",
-          icon: accountIcon,
-        },
-      ];
-      focusMenuIdx.value = 1;
-    }
+  (loggedIn) => {
+    selectedMenu.value = loggedIn ? 'account' : 'personalization'
   },
   { immediate: true },
-);
+)
 </script>
+
+<template>
+  <OsWindow
+    v-model:minimized="minimized"
+    :title="title"
+    :icon="icon"
+    @activate="emit('activate')"
+    @close="emit('close')"
+  >
+    <template #sidebar>
+      <WindowSidebar v-model="selectedMenu" :items="menuList" label="设置导航">
+        <template #header>
+          <button
+            class="setting-account"
+            type="button"
+            aria-label="打开登录窗口"
+            @click="showLoginModal = true"
+          >
+            <span class="setting-account__avatar">
+              <img :src="userStore.data?.user?.avatar || userIcon" alt="" />
+            </span>
+            <span class="setting-account__username">{{ username }}</span>
+          </button>
+        </template>
+      </WindowSidebar>
+    </template>
+
+    <div class="setting-content">
+      <PersonalizationView v-if="selectedMenu === 'personalization'" />
+    </div>
+    <Login
+      v-if="showLoginModal"
+      :visible="showLoginModal"
+      @login-status="showLoginModal = !$event"
+      @close="showLoginModal = false"
+    />
+  </OsWindow>
+</template>
+
 <style scoped lang="scss">
-.index__view {
+.setting-content {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+}
+
+.setting-account {
   display: flex;
-  height: 100%;
-  gap: 20px;
-  padding-left: 10px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px 5px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
 
-  &--menu {
-    width: 200px;
-    min-width: 200px;
-    height: 100%;
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
   }
 
-  // ---- 帐号区域 ----
-  &--account {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-    padding: 8px 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 150ms ease;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.04);
-    }
-
-    &:focus-visible {
-      outline: 2px solid #0067c0;
-      outline-offset: 1px;
-    }
+  &:focus-visible {
+    outline: 2px solid #0067c0;
+    outline-offset: 1px;
   }
 
-  // ---- 头像 ----
-  &--avatar {
+  &__avatar {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
     width: 48px;
@@ -164,29 +118,20 @@ watch(
     background: #fff;
     overflow: hidden;
     padding: 5px;
+
     img {
       width: 32px;
       height: 32px;
     }
   }
 
-  // ---- 用户名 ----
-  &--username {
+  &__username {
     font-size: 13px;
     font-weight: 500;
     color: #1e293b;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  &--content {
-    flex: 1;
-    height: calc(100% - 20px);
-    display: flex;
-    justify-content: center;
-    overflow: auto;
-    padding: 10px;
   }
 }
 </style>
