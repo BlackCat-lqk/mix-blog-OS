@@ -1,48 +1,28 @@
 # mix-blog-OS
 
-This template should help get you started developing with Vue 3 in Vite.
+基于 Vue 3、TypeScript 和 Vite 的桌面应用，目前保留：
 
-## Recommended IDE Setup
+- 设置：系统壁纸、自定义壁纸、账户资料和头像管理。
+- 登录：邮箱登录、注册、登录状态持久化和退出登录。
+- 基础界面：桌面、设置窗口、任务栏和消息提示。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+双击桌面的「设置」图标打开窗口，点击左侧账户区域打开登录弹窗。
 
-## Recommended Browser Setup
+## 开发
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+Node.js 版本要求：`^20.19.0 || >=22.12.0`。
 
 ```sh
-pnpm install
+npm ci
+npm run dev
 ```
 
-### Compile and Hot-Reload for Development
+开发环境将 `/api` 和 `/uploads` 代理至 `http://localhost:3000`。登录、注册和账户修改需要对应后端服务。
+
+## 检查与构建
 
 ```sh
-pnpm dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-pnpm build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-pnpm lint
+npm run type-check
+npm run lint
+npm run build
 ```

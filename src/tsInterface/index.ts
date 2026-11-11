@@ -1,12 +1,22 @@
 /**
- * @description: 用户信息编辑接口类型
+ * @description: 登录和账户设置共用的用户信息类型
  */
-export interface SetUserInfoEditFormType {
+export interface UserInfo {
+  isLogin: boolean;
   _id: string;
   userName: string;
   email: string;
   desc: string;
   avatar: string;
   sex: string;
-  birthday: null;
+  birthday: string | null;
+  role: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserData {
+  token: string;
+  user: UserInfo;
 }

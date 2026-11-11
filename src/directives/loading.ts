@@ -6,6 +6,10 @@ interface MaskInstance {
   fullscreen: boolean;
 }
 
+interface LoadingElement extends HTMLElement {
+  _vLoadingMask?: MaskInstance | null;
+}
+
 function resolveBinding(binding: DirectiveBinding): {
   visible: boolean;
   text: string;
@@ -60,38 +64,38 @@ function insertMask(el: HTMLElement, mask: HTMLElement): void {
   el.appendChild(mask);
 }
 
-const vLoading: Directive<HTMLElement> = {
-  mounted(el: HTMLElement, binding: DirectiveBinding) {
+const vLoading: Directive<LoadingElement> = {
+  mounted(el: LoadingElement, binding: DirectiveBinding) {
     const { visible, text } = resolveBinding(binding);
     if (!visible) return;
     const fullscreen = !!binding.modifiers?.fullscreen;
     const mask = createMask(text, fullscreen);
     insertMask(el, mask);
-    (el as any)._vLoadingMask = { el: mask, fullscreen } satisfies MaskInstance;
+    el._vLoadingMask = { el: mask, fullscreen };
   },
 
-  updated(el: HTMLElement, binding: DirectiveBinding) {
+  updated(el: LoadingElement, binding: DirectiveBinding) {
     const { visible, text } = resolveBinding(binding);
     const fullscreen = !!binding.modifiers?.fullscreen;
-    const instance: MaskInstance | undefined = (el as any)._vLoadingMask;
+    const instance = el._vLoadingMask;
 
     if (visible && !instance) {
       const mask = createMask(text, fullscreen);
       insertMask(el, mask);
-      (el as any)._vLoadingMask = { el: mask, fullscreen } satisfies MaskInstance;
+      el._vLoadingMask = { el: mask, fullscreen };
     } else if (visible && instance) {
       setText(instance.el, text);
     } else if (!visible && instance) {
       instance.el.remove();
-      (el as any)._vLoadingMask = null;
+      el._vLoadingMask = null;
     }
   },
 
-  unmounted(el: HTMLElement) {
-    const instance: MaskInstance | undefined = (el as any)._vLoadingMask;
+  unmounted(el: LoadingElement) {
+    const instance = el._vLoadingMask;
     if (instance) {
       instance.el.remove();
-      (el as any)._vLoadingMask = null;
+      el._vLoadingMask = null;
     }
   },
 };

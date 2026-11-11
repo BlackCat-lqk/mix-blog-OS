@@ -1,5 +1,4 @@
 import { fileURLToPath, URL } from "node:url";
-import { fileViewerRenderers } from "@file-viewer/vite-plugin";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import vueDevTools from "vite-plugin-vue-devtools";
@@ -11,7 +10,6 @@ export default defineConfig({
   plugins: [
     vue(),
     vueDevTools(),
-    fileViewerRenderers({ copyAssets: true }),
     // Gzip 预压缩（nginx 可直接 serve .gz 文件）
     viteCompression({
       algorithm: "gzip",

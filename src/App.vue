@@ -1,22 +1,14 @@
 <!-- * @description: 根组件 — 桌面、应用窗口管理、任务栏 -->
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import appConfig from "@/config/index";
 import OsWindow from "./components/OsWindow.vue";
 import Setting from "@/views/Setting/IndexView.vue";
-import IMusic from "@/views/IMusic/IndexView.vue";
-import UiColor from "@/views/UiColor/IndexView.vue";
-import XTools from "@/views/XTools/IndexView.vue";
 import type { AppItem } from "./types/interface.ts";
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
-import maxAiIcon from "@/assets/mixAI/ello-mixai.svg";
-import gsap from "gsap";
 
 const store = useWallpaperStore();
-// maxAi gsap动画
-const maxAiRef = ref(null);
-const showWindow = ref(false);
 const activeApp = ref<Array<AppItem>>([]);
 const focusWindow = ref<string | number>("");
 const minimizeWindow = ref<Array<string | number>>([]);
@@ -53,7 +45,6 @@ const handleClickApp = (app: AppItem) => {
   activeApp.value.push(app);
   // 焦点窗口设置为最新打开的窗口，保持层级最大
   focusWindow.value = app.enName;
-  showWindow.value = true;
 };
 
 // 点击应用的窗口
@@ -88,22 +79,6 @@ watch(
     }
   },
 );
-
-// gsap动画
-const animationInit = () => {
-  if (!maxAiRef.value) return;
-  gsap.from(maxAiRef.value, { x: 100, fill: "blue" });
-  gsap.to(maxAiRef.value, {
-    rotation: 360,
-    repeat: -1,
-    duration: 5,
-    ease: "bounce.out",
-  });
-};
-
-onMounted(() => {
-  animationInit();
-});
 </script>
 
 <template>
@@ -140,9 +115,6 @@ onMounted(() => {
       :minimize-target="minimizeTarget[app.enName]"
     >
       <Setting v-if="app.enName === 'Setting'" />
-      <IMusic v-else-if="app.enName === 'iMusic'" />
-      <UiColor v-else-if="app.enName === 'uiColor'" />
-      <XTools v-else-if="app.enName === 'X-Tools'"></XTools>
     </OsWindow>
 
     <!-- 底部任务栏 -->
@@ -162,9 +134,6 @@ onMounted(() => {
             <img :src="app.icon" alt="icon" />
           </div>
         </button>
-      </div>
-      <div class="taskbar__right">
-        <img ref="maxAiRef" :src="maxAiIcon" />
       </div>
     </div>
   </div>
@@ -273,19 +242,6 @@ $gap: 20px;
     display: flex;
     justify-content: center;
     gap: 8px;
-  }
-
-  &__right {
-    width: 100px;
-    height: 100%;
-    text-align: right;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    img {
-      height: 80%;
-    }
   }
 }
 

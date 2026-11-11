@@ -14,9 +14,7 @@ export function getCascadeOffset(): number {
 </script>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, provide, reactive, nextTick } from "vue";
-import type { VNode, Component } from "vue";
-import DialogNotification from "@/components/DialogNotification.vue";
+import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 import minimize from "@/assets/icons/minimize.svg";
 import close from "@/assets/icons/close.svg";
 import maximize from "@/assets/icons/maximize.svg";
@@ -35,32 +33,6 @@ const isMinimized = defineModel<boolean>("minimized", { default: false });
 
 // 首次打开入场动画
 const isEntering = ref(true);
-
-// ---- overlay 弹窗系统 ----
-// 子组件通过 inject 获取此对象，设置 visible/title/content 来在窗口内显示弹窗
-const osOverlay = reactive<{
-  visible: boolean;
-  title: string;
-  content: (() => VNode) | Component | null;
-  /** 点击遮罩层是否关闭弹窗，默认 true */
-  closeOnMask: boolean;
-  width: string;
-  height: string;
-}>({
-  visible: false,
-  title: "",
-  content: null,
-  closeOnMask: true,
-  width: "80%",
-  height: "80%",
-});
-
-const onOverlayMaskClick = () => {
-  if (osOverlay.closeOnMask) {
-    osOverlay.visible = false;
-  }
-};
-provide("osOverlay", osOverlay);
 
 const MIN_WIDTH = 350;
 const MIN_HEIGHT = 320;
@@ -435,22 +407,6 @@ onUnmounted(() => {
     <div class="os-window__body">
       <slot />
     </div>
-
-    <!-- overlay 弹窗：OsWindow 自己渲染，不用 Teleport，遮罩不盖 titlebar -->
-    <div v-if="osOverlay.visible" class="os-window__overlay" @click.self="onOverlayMaskClick">
-      <DialogNotification
-        :visible="true"
-        :title="osOverlay.title"
-        :width="osOverlay.width"
-        :height="osOverlay.height"
-        inline
-        @update:visible="osOverlay.visible = false"
-      >
-        <template #content>
-          <component :is="osOverlay.content" v-if="osOverlay.content" />
-        </template>
-      </DialogNotification>
-    </div>
   </div>
 </template>
 
@@ -581,21 +537,6 @@ $text-color: #000;
   flex: 1;
   // padding: 10px 2px 10px 10px;
   overflow: hidden;
-}
-
-// ---- overlay（弹窗区域，从 titlebar 下方开始，不盖标题栏）----
-.os-window__overlay {
-  position: absolute;
-  top: $titlebar-h;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(5px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 // ---- resize handles ----
