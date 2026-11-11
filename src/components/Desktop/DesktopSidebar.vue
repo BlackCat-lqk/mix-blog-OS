@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import desktopIcon from '@/assets/icons/desktop.svg'
 import appsIcon from '@/assets/icons/apps.svg'
-import type { SidebarApp } from '@/tsInterface/index'
+import type { SidebarApp, WindowBounds } from '@/tsInterface/index'
 
 defineProps<{ apps: SidebarApp[]; activeWindowId?: string; applicationsOpen: boolean }>()
 const emit = defineEmits<{
@@ -10,6 +11,15 @@ const emit = defineEmits<{
   activate: [id: string]
   personalize: []
 }>()
+const appButtons = ref<HTMLButtonElement[]>([])
+const getAppBounds = (id: string): WindowBounds | undefined => {
+  const rect = appButtons.value
+    .find((button) => button.dataset.appId === id)
+    ?.getBoundingClientRect()
+  if (!rect?.width || !rect.height) return
+  return { left: rect.left, top: rect.top, width: rect.width, height: rect.height }
+}
+defineExpose({ getAppBounds })
 </script>
 
 <template>
@@ -42,6 +52,8 @@ const emit = defineEmits<{
       <button
         v-for="app in apps"
         :key="app.id"
+        ref="appButtons"
+        :data-app-id="app.id"
         class="desktop-sidebar__button desktop-sidebar__app"
         :class="{
           'desktop-sidebar__button--active': activeWindowId === app.id,

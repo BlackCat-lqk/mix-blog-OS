@@ -1,53 +1,72 @@
 <!-- 公共窗口外壳：标题栏、窗口控制及侧边栏/内容插槽 -->
 <template>
-  <div v-show="!isMinimized" class="os-window" :class="{
-    'os-window--maximized': isMaximized,
-    'os-window--dragging': dragging,
-    'os-window--resizing': resizing,
-  }" :style="windowStyle" role="dialog" :aria-label="title" @mousedown.capture="emit('activate')"
-    @focusin="emit('activate')">
-    <!-- resize handles -->
-    <div class="os-resize os-resize--n" data-resize="n" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--s" data-resize="s" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--e" data-resize="e" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--w" data-resize="w" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--ne" data-resize="ne" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--nw" data-resize="nw" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--se" data-resize="se" @mousedown="onResizeMouseDown"></div>
-    <div class="os-resize os-resize--sw" data-resize="sw" @mousedown="onResizeMouseDown"></div>
+  <Transition
+    :css="false"
+    @enter="restoreWindow"
+    @leave="minimizeWindow"
+    @enter-cancelled="cancelWindowMotion"
+    @leave-cancelled="cancelWindowMotion"
+  >
+    <div
+      ref="windowElement"
+      v-show="!isMinimized && visible"
+      :inert="isMinimized || !visible"
+      :aria-hidden="isMinimized || !visible"
+      class="os-window"
+      :class="{
+        'os-window--maximized': isMaximized,
+        'os-window--dragging': dragging,
+        'os-window--resizing': resizing,
+      }"
+      :style="windowStyle"
+      role="dialog"
+      :aria-label="title"
+      @mousedown.capture="emit('activate')"
+      @focusin="emit('activate')"
+    >
+      <!-- resize handles -->
+      <div class="os-resize os-resize--n" data-resize="n" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--s" data-resize="s" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--e" data-resize="e" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--w" data-resize="w" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--ne" data-resize="ne" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--nw" data-resize="nw" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--se" data-resize="se" @mousedown="onResizeMouseDown"></div>
+      <div class="os-resize os-resize--sw" data-resize="sw" @mousedown="onResizeMouseDown"></div>
 
-    <!-- titlebar -->
-    <div class="os-window__titlebar" @mousedown="onTitlebarMouseDown" @dblclick.stop="toggleMaximize">
-      <div class="os-window__titlebar__lf">
-        <div v-if="icon" class="os-window__icon">
-          <img :src="icon" alt="" />
+      <!-- titlebar -->
+      <div class="os-window__titlebar" @mousedown="onTitlebarMouseDown" @dblclick.stop="toggleMaximize">
+        <div class="os-window__titlebar__lf">
+          <div v-if="icon" class="os-window__icon">
+            <img :src="icon" alt="" />
+          </div>
+          <span class="os-window__title">{{ title }}</span>
         </div>
-        <span class="os-window__title">{{ title }}</span>
+
+        <div class="os-window__controls" @mousedown.stop @dblclick.stop>
+          <button class="os-window__btn os-window__btn--minimize" type="button" @click="isMinimized = true" title="最小化"
+            aria-label="最小化">
+            <img :src="minimize" alt="" />
+          </button>
+          <button class="os-window__btn" type="button" @click="toggleMaximize" :title="isMaximized ? '还原' : '最大化'"
+            :aria-label="isMaximized ? '还原' : '最大化'">
+            <img :src="isMaximized ? restore : maximize" alt="" />
+          </button>
+          <button class="os-window__btn os-window__btn--close" type="button" @mouseenter="moveClose = true" @mouseleave="moveClose = false" @click="emit('close')" title="关闭"
+            aria-label="关闭">
+            <img :src="moveClose ? closeLight : close" alt="" />
+          </button>
+        </div>
       </div>
 
-      <div class="os-window__controls" @mousedown.stop @dblclick.stop>
-        <button class="os-window__btn os-window__btn--minimize" type="button" @click="isMinimized = true" title="最小化"
-          aria-label="最小化">
-          <img :src="minimize" alt="" />
-        </button>
-        <button class="os-window__btn" type="button" @click="toggleMaximize" :title="isMaximized ? '还原' : '最大化'"
-          :aria-label="isMaximized ? '还原' : '最大化'">
-          <img :src="isMaximized ? restore : maximize" alt="" />
-        </button>
-        <button class="os-window__btn os-window__btn--close" type="button" @mouseenter="moveClose = true" @mouseleave="moveClose = false" @click="emit('close')" title="关闭"
-          aria-label="关闭">
-          <img :src="moveClose ? closeLight : close" alt="" />
-        </button>
+      <div class="os-window__body">
+        <slot name="sidebar" />
+        <div class="os-window__content">
+          <slot />
+        </div>
       </div>
     </div>
-
-    <div class="os-window__body">
-      <slot name="sidebar" />
-      <div class="os-window__content">
-        <slot />
-      </div>
-    </div>
-  </div>
+  </Transition>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -57,12 +76,15 @@ import closeLight from '@/assets/icons/close-light.svg'
 import maximize from '@/assets/icons/maximize.svg'
 import restore from '@/assets/icons/maximize-defalut.svg'
 import { useWindowGeometry } from './useWindowGeometry'
+import { useWindowMotion } from './useWindowMotion'
+import type { AppWindowProps } from '@/tsInterface/index'
 
 defineOptions({ name: 'OsWindow' })
-defineProps<{ title?: string; icon?: string }>()
+const props = withDefaults(defineProps<AppWindowProps>(), { visible: true })
 const emit = defineEmits<{ close: []; activate: [] }>()
 const isMinimized = defineModel<boolean>('minimized', { default: false })
 const moveClose = ref(false)
+const windowElement = ref<HTMLElement>()
 const {
   windowStyle,
   isMaximized,
@@ -72,6 +94,12 @@ const {
   onTitlebarMouseDown,
   onResizeMouseDown,
 } = useWindowGeometry()
+const { minimizeWindow, restoreWindow, cancelWindowMotion } = useWindowMotion(props, windowElement, {
+  minimized: isMinimized,
+  maximized: isMaximized,
+  dragging,
+  resizing,
+})
 </script>
 <style scoped lang="scss">
 // ---- variables ----

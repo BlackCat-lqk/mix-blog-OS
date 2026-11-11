@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="music" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse"><stop stop-color="#a789f5"/><stop offset="1" stop-color="#6955cf"/></linearGradient></defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#music)"/>
+  <path d="M27 39V20l23-5v20M27 25l23-5" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="21" cy="41" rx="8" ry="6" fill="#fff"/>
+  <ellipse cx="44" cy="37" rx="8" ry="6" fill="#fff"/>
+</svg>

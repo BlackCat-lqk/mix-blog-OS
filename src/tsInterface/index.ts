@@ -2,6 +2,9 @@
  * @description: ts接口类封装
  */
 import type { Component } from 'vue'
+
+export type ErrorStatusCode = 403 | 404 | 500
+
 export interface UserInfo {
   isLogin: boolean;
   _id: string;
@@ -56,6 +59,13 @@ export interface WindowBounds {
   height: number
 }
 
+export interface AppWindowProps {
+  title?: string
+  icon?: string
+  minimizeTarget?: () => WindowBounds | undefined
+  visible?: boolean
+}
+
 export interface SettingsNavigation {
   section: string
 }
@@ -67,4 +77,30 @@ export interface WallpaperData {
 
 export interface FileUploadEmits {
   (e: 'file-selected', file: File): void
+}
+
+export type MusicSource = 'local' | 'online'
+export type MusicPlayMode = 'loop' | 'single' | 'shuffle'
+
+export interface MusicLyricLine {
+  time: number
+  text: string
+}
+
+export interface MusicLyrics {
+  lines: MusicLyricLine[]
+  text: string
+}
+
+export interface MusicTrack {
+  id: string
+  source: MusicSource
+  fileKey?: string
+  fileName: string
+  title: string
+  artist: string
+  url: string
+  coverUrl?: string
+  lyrics: MusicLyrics
+  duration: number
 }

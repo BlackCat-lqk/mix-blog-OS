@@ -4,6 +4,7 @@
 
 - 设置：系统壁纸、自定义壁纸、账户资料和头像管理。
 - 登录：邮箱登录、注册、登录状态持久化和退出登录。
+- 音乐：本地歌曲列表、搜索、播放控制、循环模式、封面和同步歌词；在线入口预留。
 - 基础界面：桌面和应用窗口。
 
 双击桌面的「设置」图标打开或恢复最小化的窗口，点击左侧账户区域打开登录弹窗。
@@ -14,10 +15,34 @@
 
 项目的接口声明统一放在 `src/tsInterface/index.ts`，各模块通过 `import type` 引用。
 
-- `src/components/OsWindow/index.vue`：公共窗口外壳，提供 `sidebar` 和默认内容插槽，通过 `v-model:minimized` 管理最小化，向外发送 `activate`、`close` 事件。
+- `src/components/OsWindow/index.vue`：公共窗口外壳，提供 `sidebar` 和默认内容插槽，通过 `v-model:minimized` 管理最小化，`visible` 独立控制总览等临时隐藏，向外发送 `activate`、`close` 事件。应用通过此组件统一获得拖拽、缩放、最大化、还原和窗口过渡。
 - `src/components/OsWindow/WindowSidebar.vue`：窗口侧边栏子组件，通过 `items` 和 `v-model` 控制导航，`header` 插槽用于放置账户等应用内容。
 - `src/components/OsWindow/useWindowGeometry.ts`：封装拖拽、缩放、最大化和位置状态，不依赖具体应用。
+- `src/components/OsWindow/useWindowMotion.ts`：设置、音乐及后续应用统一使用 200ms 窗口过渡。最小化收回到对应状态栏图标，恢复时从图标展开；最大化与还原使用 FLIP 缩放过渡，保留原位置和大小。拖拽、缩放及桌面总览切换不会附带过渡；减少动态效果模式下直接切换。
 - `src/views/Setting/IndexView.vue`：组合窗口、侧边栏与设置内容，维护设置业务和登录状态。应用入口统一注册在 `src/config/index.ts`。
+
+## 音乐应用
+
+双击桌面的「音乐」或从全部应用中打开。左侧菜单切换本地和在线，内容区左侧显示列表与搜索，右侧显示当前歌曲、封面、歌词和播放控件。在线页面仅预留入口，暂不请求接口。
+
+- 点击「添加音乐」可批量选择音频。播放格式以浏览器支持为准；列表标题默认使用文件名，`歌手 - 歌名.mp3` 会自动拆分歌手和歌名。
+- 同时选择与音频同名的 `.lrc` / `.txt` 和封面图片，可自动关联；也可点击当前歌曲的封面或「导入歌词」单独选择。暂不解析音频内嵌标签。
+- LRC 支持多时间标签、毫秒时间和 offset 偏移，当前歌词自动高亮并居中，点击歌词可跳转；无时间标签时按纯文本显示。
+- 支持播放、暂停、上一首、下一首、进度拖动和音量调节；播放模式按钮依次切换列表循环、单曲循环、随机播放。随机模式在一轮中避免重复，上一首返回已播放记录。搜索仅筛选列表，不改变播放顺序。
+- 文件只在浏览器本地使用，最小化、返回桌面或切换在线页面时继续播放；关闭应用停止播放并释放文件 URL，重新打开或刷新后需重新添加。
+
+`src/views/Music/useMusicPlayer.ts` 管理音频与队列，`lyrics.ts` 解析歌词，`components/` 负责列表和播放器界面。`MusicTrack.source` 区分本地与在线来源，后续可将接口返回的歌曲和播放地址接入同一播放器。
+
+## 页面路由
+
+根组件 `src/App.vue` 只渲染路由出口，桌面位于 `src/views/Desktop/IndexView.vue`。桌面、独立登录页和错误页均通过路由动态导入。错误页共用 `src/views/Error/IndexView.vue`，按路由传入的状态码显示内容。
+
+- `/403`（`error-403`）：无访问权限。
+- `/404`（`error-404`）：页面不存在；所有未匹配的地址重定向至此。
+- `/500`（`error-500`）：服务异常。
+- `/login`：独立登录页面，关闭或登录成功后返回桌面。
+
+业务中可使用 `router.replace({ name: 'error-403' })` 或 `router.replace({ name: 'error-500' })` 跳转。接口表单中的错误仍由原有逻辑处理。
 
 ## 开发
 
@@ -36,6 +61,7 @@ npm run dev
 
 ```sh
 npm run type-check
+npm run test:music
 npm run lint
 npm run build
 ```
@@ -51,4 +77,4 @@ npm run preview -- --host 127.0.0.1
 
 在 Chrome 无痕窗口中打开命令输出的地址，再运行 Lighthouse。报告中提示的 IndexedDB 存储数据会影响壁纸加载；比较前后结果时应使用相同的设备、限速和壁纸数据。
 
-桌面首屏只加载基础界面，设置窗口和登录表单在打开时加载。页面提供中文语言标记、主内容区域、描述信息及有效的 `robots.txt`。
+桌面首屏只加载基础界面，设置、音乐和登录表单在打开时加载。页面提供中文语言标记、主内容区域、描述信息及有效的 `robots.txt`。
