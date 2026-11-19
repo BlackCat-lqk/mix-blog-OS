@@ -70,9 +70,57 @@ export interface SettingsNavigation {
   section: string
 }
 
+export interface NavigationSite {
+  id: string
+  title: string
+  description: string
+  url: string
+  icon: string
+}
+
+export interface NavigationSubcategory {
+  id: string
+  title: string
+  sites: NavigationSite[]
+}
+
+export interface NavigationCategory {
+  id: string
+  title: string
+  children: NavigationSubcategory[]
+}
+
+export interface GalleryAlbum {
+  id: string
+  name: string
+  thumbnail: string
+}
+
+export interface GalleryMedia {
+  id: string
+  albumId: string
+  title: string
+  type: 'image' | 'video'
+  src: string
+  thumbnail: string
+}
+
+export interface AboutTimelineEntry {
+  id: string
+  title: string
+  date?: string
+  description: string
+}
+
 export interface WallpaperData {
   current: string
   history: string[]
+  bingEnabled?: boolean
+  previousWallpaper?: string
+}
+
+export interface BingWallpaperResponse {
+  images?: { url?: string }[]
 }
 
 export interface FileUploadEmits {

@@ -31,6 +31,11 @@ export default defineConfig(({ command, mode }) => ({
   },
   server: {
     proxy: {
+      "/bing/HPImageArchive.aspx": {
+        target: "https://www.bing.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bing/, ""),
+      },
       "/api": {
         target: "http://localhost:3000", // 代理目标地址
         changeOrigin: true,

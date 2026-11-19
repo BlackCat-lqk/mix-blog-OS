@@ -11,7 +11,12 @@ export function loginUserApi(params: { email: string; password: string }) {
  * 用户注册
  * @returns {Promise}
  */
-export function registerUserApi(params: { email: string; password: string }) {
+export function registerUserApi(params: {
+  email: string;
+  userName: string;
+  password: string;
+  invitationCode: string;
+}) {
   return request.post("/user/register", params);
 }
 

@@ -57,6 +57,18 @@ npm run dev
 
 开发环境将 `/api` 和 `/uploads` 代理至 `http://localhost:3000`。登录、注册和账户修改需要对应后端服务。
 
+个性化设置中「浏览照片」下方可启用必应在线壁纸，读取 `images[0].url` 并拼接 `https://www.bing.com` 作为桌面背景。开关状态会保存，刷新后重新获取今日壁纸；关闭开关恢复原壁纸，手动选择或上传图片会关闭必应壁纸。请求失败时保留当前背景，可点击「重试」。
+
+必应的 JSON 接口不允许浏览器跨域读取，Vite 开发与预览服务通过 `/bing/HPImageArchive.aspx` 代理请求。生产部署也需要配置此代理，例如 nginx：
+
+```nginx
+location = /bing/HPImageArchive.aspx {
+    proxy_pass https://www.bing.com/HPImageArchive.aspx;
+    proxy_set_header Host www.bing.com;
+    proxy_ssl_server_name on;
+}
+```
+
 ## 检查与构建
 
 ```sh

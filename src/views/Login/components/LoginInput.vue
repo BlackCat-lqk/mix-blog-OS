@@ -28,10 +28,14 @@
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"
+        :autocomplete="autocomplete"
+        :inputmode="inputmode"
+        required
         :aria-invalid="hasError"
         :aria-describedby="hasError ? `login-input-error-${uid}` : undefined"
         class="login-input__field"
         @input="onInput"
+        @blur="emit('blur')"
       />
 
       <!-- 密码可见切换 -->
@@ -39,6 +43,7 @@
         v-if="type === 'password'"
         type="button"
         class="login-input__toggle"
+        :disabled="disabled"
         :aria-label="showPassword ? '隐藏密码' : '显示密码'"
         :aria-pressed="showPassword"
         @click="togglePassword"
@@ -69,7 +74,9 @@ const props = withDefaults(
     /** 输入框标签（无障碍必需） */
     label: string;
     /** 输入类型 */
-    type?: "text" | "password";
+    type?: "text" | "password" | "email";
+    autocomplete?: string;
+    inputmode?: "text" | "email" | "numeric";
     /** 占位提示 */
     placeholder?: string;
     /** 错误信息（非空时显示错误状态） */
@@ -81,6 +88,8 @@ const props = withDefaults(
   }>(),
   {
     type: "text",
+    autocomplete: "off",
+    inputmode: "text",
     placeholder: "",
     error: "",
     disabled: false,
@@ -90,6 +99,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   "update:modelValue": [value: string];
+  blur: [];
 }>();
 
 // ---- 密码可见切换 ----
@@ -171,7 +181,9 @@ $field-h: 48px;
   // ---- input field ----
   &__field {
     flex: 1;
+    min-width: 0;
     height: 100%;
+    padding-left: 14px;
     padding-right: 14px;
     border: none;
     font-size: 13px;
@@ -245,8 +257,6 @@ $field-h: 48px;
 
   // ---- error message ----
   &__error {
-    position: absolute;
-    bottom: -20px;
     margin: 0;
     font-size: 12px;
     line-height: 1.4;

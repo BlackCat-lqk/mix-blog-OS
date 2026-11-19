@@ -6,7 +6,7 @@
       '--desktop-inset-left': `${sidebarInset}px`,
       '--desktop-sidebar-offset': `${sidebarOffset}px`,
       '--desktop-sidebar-width': `${sidebarWidth}px`,
-      '--desktop-wallpaper': store.initialized && store.current ? `url(${store.current})` : 'none',
+      '--desktop-wallpaper': store.initialized && store.wallpaperUrl ? `url(${store.wallpaperUrl})` : 'none',
     }"
   >
     <div class="desktop" :inert="applicationsOpen">

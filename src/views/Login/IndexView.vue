@@ -1,16 +1,27 @@
 <!--
   Login IndexView — 登录页主入口
-  全屏暗色遮罩 + 登录卡片 + 登录表单
+  全屏暗色遮罩 + 登录 / 注册表单
 -->
 <template>
   <Teleport to="body">
-    <div v-if="props.visible" class="login-modal__overlay">
-      <div class="login-modal__card-wrapper">
+    <div v-if="props.visible" class="login-modal__overlay" @keydown.esc="close">
+      <div
+        class="login-modal__card-wrapper"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+      >
         <!-- 关闭按钮 -->
-        <button class="login-modal__close" type="button" @click="close">
+        <button
+          class="login-modal__close"
+          type="button"
+          :disabled="loading"
+          aria-label="关闭弹窗"
+          @click="close"
+        >
           <img :src="closeIcon" />
         </button>
-        <div class="login-card">
+        <div class="login-card" :class="{ 'login-card--register': isRegister }">
           <!-- 品牌区域 -->
           <div class="login-card__brand">
             <!-- Logo：抽象 OS 图标 -->
@@ -20,49 +31,83 @@
           </div>
           <!-- 表单 -->
           <div class="login-card__body">
-            <form
-              class="login-form"
-              @submit.prevent="handleSubmit"
-              @keydown="onKeydown"
-              novalidate
-            >
+            <h2 :id="titleId" class="login-card__title">
+              {{ isRegister ? "用户注册" : "用户登录" }}
+            </h2>
+            <form class="login-form" @submit.prevent="handleSubmit" novalidate>
               <!-- 帐号 -->
               <LoginInput
-                v-model="account"
+                v-model="form.email"
                 label="邮箱账号"
-                type="text"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
                 placeholder="请输入邮箱帐号"
-                :error="accountError"
+                :error="errors.email"
                 :disabled="loading"
                 :icon="iconAccount"
+                @blur="validateField('email')"
+                @update:model-value="revalidateField('email')"
+              />
+              <LoginInput
+                v-if="isRegister"
+                v-model="form.userName"
+                label="用户名"
+                autocomplete="username"
+                placeholder="仅支持中文、英文和数字"
+                :error="errors.userName"
+                :disabled="loading"
+                :icon="iconAccount"
+                @blur="validateField('userName')"
+                @update:model-value="revalidateField('userName')"
               />
               <!-- 密码 -->
               <LoginInput
-                v-model="password"
+                v-model="form.password"
                 label="密码"
                 type="password"
-                placeholder="请输入密码"
-                :error="passwordError"
+                :autocomplete="isRegister ? 'new-password' : 'current-password'"
+                placeholder="至少 4 位，支持英文、数字和半角特殊字符"
+                :error="errors.password"
                 :disabled="loading"
                 :icon="iconPassword"
+                @blur="validateField('password')"
+                @update:model-value="revalidateField('password')"
               />
+              <LoginInput
+                v-if="isRegister"
+                v-model="form.invitationCode"
+                label="邀请码"
+                inputmode="numeric"
+                placeholder="请输入 6 位数字邀请码"
+                :error="errors.invitationCode"
+                :disabled="loading"
+                :icon="iconPassword"
+                @blur="validateField('invitationCode')"
+                @update:model-value="revalidateField('invitationCode')"
+              />
+              <p v-if="submitError" class="login-form__error" role="alert">{{ submitError }}</p>
+              <p v-if="successMessage" class="login-form__success" role="status">
+                {{ successMessage }}
+              </p>
               <div class="login-register">
                 <!-- 注册按钮 -->
-                <button type="button" class="login-form__register" @click.stop="register">
-                  <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }"
-                    >注 册</span
-                  >
+                <button
+                  type="button"
+                  class="login-form__register"
+                  :disabled="loading"
+                  @click.stop="switchMode"
+                >
+                  {{ isRegister ? "返回登录" : "注 册" }}
                 </button>
                 <!-- 提交按钮 -->
                 <button
                   type="submit"
                   class="login-form__submit"
                   :class="{ 'login-form__submit--loading': loading }"
-                  :disabled="!canSubmit"
+                  :disabled="loading"
                 >
-                  <span v-show="!loading" :class="{ 'login-form__text--hidden': loading }"
-                    >登 录</span
-                  >
+                  {{ loading ? "提交中…" : isRegister ? "注 册" : "登 录" }}
                 </button>
               </div>
             </form>
@@ -73,7 +118,7 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, reactive, useId, watch } from "vue";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
 import logoIcon from "@/assets/icons/logo-light.svg";
 import { loginUserApi, registerUserApi } from "@/server/user.ts";
@@ -81,6 +126,12 @@ import iconAccount from "@/assets/icons/account-light.svg";
 import iconPassword from "@/assets/icons/password-light.svg";
 import LoginInput from "./components/LoginInput.vue";
 import closeIcon from "@/assets/icons/close-light.svg";
+import {
+  validateEmail,
+  validateUserName,
+  validatePassword,
+  validateInvitationCode,
+} from "@/utils/validation";
 const emit = defineEmits(["loginStatus", "update:visible", "close"]);
 
 const props = defineProps({
@@ -91,52 +142,63 @@ const props = defineProps({
   },
 });
 const userInfoStore = useUserInfoStore();
+const titleId = useId();
 // ---- 表单状态 ----
-const account = ref("");
-const password = ref("");
+const isRegister = ref(false);
+const form = reactive({ email: "", userName: "", password: "", invitationCode: "" });
+const errors = reactive({ email: "", userName: "", password: "", invitationCode: "" });
+type FormField = keyof typeof form;
 const loading = ref(false);
-
-// ---- 字段级错误 ----
-const accountError = ref("");
-const passwordError = ref("");
+const submitError = ref("");
+const successMessage = ref("");
 
 // ---- 验证规则 ----
-const MIN_ACCOUNT_LEN = 2;
-const MIN_PASSWORD_LEN = 4;
+const validators = {
+  email: validateEmail,
+  userName: validateUserName,
+  password: validatePassword,
+  invitationCode: validateInvitationCode,
+};
+const validateField = (field: FormField) => {
+  errors[field] = validators[field](form[field]);
+  return !errors[field];
+};
+const revalidateField = (field: FormField) => {
+  if (errors[field]) validateField(field);
+  submitError.value = "";
+  successMessage.value = "";
+};
 const validate = (): boolean => {
-  accountError.value = "";
-  passwordError.value = "";
-
-  let valid = true;
-
-  if (!account.value.trim()) {
-    accountError.value = "请输入帐号";
-    valid = false;
-  } else if (account.value.trim().length < MIN_ACCOUNT_LEN) {
-    accountError.value = `帐号至少 ${MIN_ACCOUNT_LEN} 个字符`;
-    valid = false;
-  }
-
-  if (!password.value) {
-    passwordError.value = "请输入密码";
-    valid = false;
-  } else if (password.value.length < MIN_PASSWORD_LEN) {
-    passwordError.value = `密码至少 ${MIN_PASSWORD_LEN} 个字符`;
-    valid = false;
-  }
-
-  return valid;
+  const fields: FormField[] = isRegister.value
+    ? ["email", "userName", "password", "invitationCode"]
+    : ["email", "password"];
+  return fields.map(validateField).every(Boolean);
 };
 // ---- 表单提交 ----
 const handleSubmit = async () => {
-  if (!validate()) return;
+  if (loading.value || !validate()) return;
 
   loading.value = true;
+  submitError.value = "";
+  successMessage.value = "";
 
   try {
+    if (isRegister.value) {
+      const data = await registerUserApi({ ...form, email: form.email.trim() });
+      if (data.data.code !== 200) {
+        submitError.value = data.data.message || "注册失败，请稍后重试";
+        return;
+      }
+      switchMode();
+      form.password = "";
+      form.userName = "";
+      form.invitationCode = "";
+      successMessage.value = "注册成功，请登录";
+      return;
+    }
     const data = await loginUserApi({
-      email: account.value.trim(),
-      password: password.value,
+      email: form.email.trim(),
+      password: form.password,
     });
     const res = data.data;
     if (res.code === 200 && res.data) {
@@ -146,44 +208,43 @@ const handleSubmit = async () => {
       emit("update:visible", false);
       emit("close", false);
     } else {
+      submitError.value = res.message || "登录失败，请稍后重试";
       userInfoStore.removeUserInfo();
       emit("loginStatus", false);
     }
-  } catch {
-    userInfoStore.removeUserInfo();
-    emit("loginStatus", false);
+  } catch (error) {
+    submitError.value = error instanceof Error ? error.message : "提交失败，请稍后重试";
+    if (!isRegister.value) {
+      userInfoStore.removeUserInfo();
+      emit("loginStatus", false);
+    }
   } finally {
     loading.value = false;
   }
 };
 
-// ---- 键盘事件 ----
-const onKeydown = (e: KeyboardEvent) => {
-  if (e.key === "Enter" && !loading.value) {
-    e.preventDefault();
-    handleSubmit();
-  }
+const clearErrors = () => {
+  for (const field of Object.keys(errors) as FormField[]) errors[field] = "";
+  submitError.value = "";
+  successMessage.value = "";
+};
+const switchMode = () => {
+  isRegister.value = !isRegister.value;
+  clearErrors();
 };
 
-// 注册
-const register = async () => {
-  try {
-    const params = {
-      userName: account.value.trim(),
-      email: account.value.trim(),
-      password: password.value,
-    };
-    await registerUserApi(params);
-  } catch {
-    return;
-  }
-};
-
-// ---- 按钮是否可点击 ----
-const canSubmit = computed(
-  () => !loading.value && account.value.trim().length > 0 && password.value.length > 0,
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) return;
+    isRegister.value = false;
+    for (const field of Object.keys(form) as FormField[]) form[field] = "";
+    clearErrors();
+  },
 );
+
 const close = () => {
+  if (loading.value) return;
   emit("update:visible", false);
   emit("close", false);
 };
@@ -235,12 +296,42 @@ $radius: 10px;
   &__body {
     width: 100%;
   }
+  &__title {
+    margin: 12px 0 24px;
+    color: $text-primary;
+    font-size: 20px;
+    text-align: center;
+  }
+  &--register {
+    padding-top: 24px;
+
+    .login-card__logo {
+      width: 80px;
+    }
+
+    .login-form {
+      gap: 20px;
+    }
+  }
 }
 .login-form {
   display: flex;
   flex-direction: column;
   gap: 24px;
   width: 100%;
+  &__error,
+  &__success {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  &__error {
+    color: #f87171;
+  }
+  &__success {
+    color: #86efac;
+  }
   // ---- 提交按钮 ----
   &__submit,
   &__register {
@@ -299,6 +390,8 @@ $radius: 10px;
     align-items: center;
     justify-content: center;
     padding: 24px;
+    overflow-y: auto;
+    scrollbar-width: thin;
     background: rgba(0, 0, 0, 0.55);
   }
 
@@ -307,6 +400,8 @@ $radius: 10px;
     position: relative;
     width: 100%;
     max-width: 420px;
+    max-height: 100%;
+    overflow-y: auto;
     background: rgba(0, 0, 0, 0.35);
     border-radius: 20px;
   }

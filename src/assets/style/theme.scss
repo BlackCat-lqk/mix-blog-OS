@@ -1,0 +1,11 @@
+:root{
+  --app-window-background-color: #f3f3f3;
+  --app-window-color: #000;
+  --app-window-header-option-bg: #EAEAEA;
+}
+
+[data-theme='dark']{
+  --app-window-background-color: #1d1b1b;
+  --app-window-color: #fff;
+  --app-window-header-option-bg: #2d2d2d;
+}

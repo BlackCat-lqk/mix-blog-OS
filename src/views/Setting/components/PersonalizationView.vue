@@ -56,18 +56,40 @@
       <button class="preview-btn" @click="triggerUpload">浏览照片</button>
       <input ref="fileInput" type="file" accept="image/*" @change="onFileChange" hidden />
     </div>
+    <!-- 必应在线壁纸 -->
+    <div class="index-personalozation--bing">
+      <div class="bing-description">
+        <label for="bing-wallpaper">启用必应在线壁纸</label>
+        <span v-if="store.bingLoading" role="status">正在加载今日壁纸…</span>
+        <span v-else-if="store.bingError" role="alert">{{ store.bingError }}</span>
+      </div>
+      <div class="bing-controls">
+        <button v-if="store.bingError" type="button" @click="store.loadBingWallpaper()">
+          重试
+        </button>
+        <input
+          id="bing-wallpaper"
+          type="checkbox"
+          role="switch"
+          :checked="store.bingEnabled"
+          :disabled="!store.initialized"
+          @change="onBingChange"
+        />
+      </div>
+    </div>
     <!-- 选择主题 -->
     <div class="index-personalozation--theme">
       <span>选择主题</span>
       <div>
-        <button type="button">浅色</button>
-        <button type="button" class="dark-theme-btn">深色</button>
+        <button type="button" @click="switchTheme('light')">浅色</button>
+        <button type="button" class="dark-theme-btn" @click="switchTheme('dark')">深色</button>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
 import { ref, onUnmounted } from "vue";
+import { publicStore } from "@/stores/public"
 import { useWallpaperStore } from "@/stores/wallpaper";
 import defaultWallpaper1 from "@/assets/setting/images/wallpaper/default-wallpaper1.jpg";
 import defaultWallpaper2 from "@/assets/setting/images/wallpaper/default-wallpaper2.png";
@@ -107,6 +129,11 @@ const triggerUpload = () => {
   fileInput.value?.click();
 };
 
+const onBingChange = (e: Event) => {
+  activeReader?.abort();
+  store.setBingEnabled((e.target as HTMLInputElement).checked);
+};
+
 const onFileChange = (e: Event) => {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
@@ -128,6 +155,12 @@ const onFileChange = (e: Event) => {
   reader.readAsDataURL(file);
   input.value = "";
 };
+
+const switchTheme = (val: string) => {
+  document.documentElement.setAttribute('data-theme', val)
+  // 持久化
+  publicStore().switchTheme(val)
+}
 </script>
 <style scoped lang="scss">
 .index-personalozation {
@@ -277,6 +310,7 @@ const onFileChange = (e: Event) => {
       }
     }
   }
+  &--bing,
   &--theme {
     width: 80%;
     display: flex;
@@ -301,6 +335,47 @@ const onFileChange = (e: Event) => {
       .dark-theme-btn {
         color: #fff;
         background-color: #000;
+      }
+    }
+  }
+  &--bing {
+    .bing-description {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      span {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+    input {
+      width: 36px;
+      height: 20px;
+      cursor: pointer;
+      appearance: none;
+      border: 1px solid #888;
+      border-radius: 10px;
+      background: #ddd;
+      &::before {
+        content: "";
+        display: block;
+        width: 14px;
+        height: 14px;
+        margin: 2px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      &:checked {
+        border-color: #0067c0;
+        background: #0067c0;
+        &::before {
+          transform: translateX(16px);
+        }
+      }
+      &:disabled {
+        cursor: wait;
+        opacity: 0.5;
       }
     }
   }

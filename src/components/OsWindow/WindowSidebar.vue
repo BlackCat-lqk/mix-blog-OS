@@ -57,7 +57,7 @@ const selected = defineModel<string>({ required: true })
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: inherit;
+    color: var(--app-window-color);
     text-align: left;
     cursor: pointer;
 

@@ -3,8 +3,11 @@
  */
 import type { AppItem } from "@/tsInterface/index"
 import { defineAsyncComponent, markRaw } from 'vue'
-import settingIcon from '@/assets/icons/app/setting.svg'
-import musicIcon from '@/assets/icons/app/music.svg'
+import settingIcon from '@/assets/icons/app/setting.png'
+import musicIcon from '@/assets/icons/app/music.png'
+import aboutIcon from '@/assets/icons/app/about.png'
+import navigationIcon from '@/assets/icons/app/website.png'
+import galleryIcon from '@/assets/icons/app/photo.png'
 
 const appConfig: AppItem[] = [
   {
@@ -18,6 +21,24 @@ const appConfig: AppItem[] = [
     enName: 'Music',
     icon: musicIcon,
     component: markRaw(defineAsyncComponent(() => import('@/views/Music/IndexView.vue'))),
+  },
+  {
+    zhName: '关于',
+    enName: 'About',
+    icon: aboutIcon,
+    component: markRaw(defineAsyncComponent(() => import('@/views/About/IndexView.vue'))),
+  },
+  {
+    zhName: '导航',
+    enName: 'Navigation',
+    icon: navigationIcon,
+    component: markRaw(defineAsyncComponent(() => import('@/views/Navigation/IndexView.vue'))),
+  },
+  {
+    zhName: '图库',
+    enName: 'Gallery',
+    icon: galleryIcon,
+    component: markRaw(defineAsyncComponent(() => import('@/views/Gallery/IndexView.vue'))),
   },
 ]
 

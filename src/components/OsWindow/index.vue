@@ -46,15 +46,18 @@
         <div class="os-window__controls" @mousedown.stop @dblclick.stop>
           <button class="os-window__btn os-window__btn--minimize" type="button" @click="isMinimized = true" title="最小化"
             aria-label="最小化">
-            <img :src="minimize" alt="" />
+            <img v-if="theme !== 'dark'" :src="minimize" alt="" />
+            <img v-else :src="minimizeWhite" alt="" />
           </button>
           <button class="os-window__btn" type="button" @click="toggleMaximize" :title="isMaximized ? '还原' : '最大化'"
             :aria-label="isMaximized ? '还原' : '最大化'">
-            <img :src="isMaximized ? restore : maximize" alt="" />
+            <img v-if="theme !== 'dark'" :src="isMaximized ? restore : maximize" alt="" />
+            <img v-else :src="isMaximized ? restoreWhite : maximizeWhite" alt="" />
           </button>
           <button class="os-window__btn os-window__btn--close" type="button" @mouseenter="moveClose = true" @mouseleave="moveClose = false" @click="emit('close')" title="关闭"
             aria-label="关闭">
-            <img :src="moveClose ? closeLight : close" alt="" />
+            <img v-if="theme !== 'dark'" :src="moveClose ? closeLight : close" alt="" />
+            <img v-else :src="moveClose ? close : closeLight" alt="" />
           </button>
         </div>
       </div>
@@ -69,12 +72,16 @@
   </Transition>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
-import minimize from '@/assets/icons/minimize.svg'
+import { ref, computed } from 'vue'
+import { publicStore } from "@/stores/public"
 import close from '@/assets/icons/close.svg'
 import closeLight from '@/assets/icons/close-light.svg'
+import minimize from '@/assets/icons/minimize.svg'
 import maximize from '@/assets/icons/maximize.svg'
 import restore from '@/assets/icons/maximize-defalut.svg'
+import minimizeWhite from '@/assets/icons/minimize-white.svg'
+import maximizeWhite from '@/assets/icons/maximize-white.svg'
+import restoreWhite from '@/assets/icons/maximize-defalut-white.svg'
 import { useWindowGeometry } from './useWindowGeometry'
 import { useWindowMotion } from './useWindowMotion'
 import type { AppWindowProps } from '@/tsInterface/index'
@@ -100,12 +107,17 @@ const { minimizeWindow, restoreWindow, cancelWindowMotion } = useWindowMotion(pr
   dragging,
   resizing,
 })
+
+const theme = computed(() => {
+  return publicStore().theme
+})
+
 </script>
 <style scoped lang="scss">
 // ---- variables ----
 $titlebar-h: 40px;
 $close-hover: #DB382C;
-$text-color: #000;
+$text-color: var(--app-window-color);
 
 .os-window {
   position: fixed;
@@ -119,7 +131,7 @@ $text-color: #000;
   outline-width: 1px;
   outline-offset: 0px;
   // border: 1px solid rgba(11,11,12,0.06);
-  background: #F3F3F3;
+  background: var(--app-window-background-color);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.15);
   overflow: hidden;
 
@@ -199,13 +211,12 @@ $text-color: #000;
   }
 
   &:hover {
-    background: #EAEAEA;
+    background: var(--app-window-header-option-bg);
     cursor: pointer;
   }
 
   &--close:hover {
     background: $close-hover;
-    color: #fff;
   }
 }
 
