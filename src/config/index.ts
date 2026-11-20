@@ -8,8 +8,17 @@ import musicIcon from '@/assets/icons/app/music.png'
 import aboutIcon from '@/assets/icons/app/about.png'
 import navigationIcon from '@/assets/icons/app/website.png'
 import galleryIcon from '@/assets/icons/app/photo.png'
+import controlPanelIcon from '@/assets/icons/app/adminUser.png'
 
 const appConfig: AppItem[] = [
+  {
+    zhName: '控制面板',
+    enName: 'ControlPanel',
+    icon: controlPanelIcon,
+    requiresAuth: true,
+    requiresAdmin: true,
+    component: markRaw(defineAsyncComponent(() => import('@/views/ControlPanel/IndexView.vue'))),
+  },
   {
     zhName: '设置',
     enName: 'Setting',

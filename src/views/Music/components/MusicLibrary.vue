@@ -3,17 +3,24 @@ import { computed, ref } from 'vue'
 import type { MusicSource, MusicTrack } from '@/tsInterface/index'
 import MusicIcon from './MusicIcon.vue'
 import { formatTime } from '../lyrics'
+import ContentPagination from '@/components/ContentPagination.vue'
 
 const props = defineProps<{
   source: MusicSource
   tracks: readonly MusicTrack[]
   currentId: string
   isPlaying: boolean
+  listLoading: boolean
+  listError: string
+  total: number
+  page: number
+  pageCount: number
 }>()
-const emit = defineEmits<{ import: [files: File[]]; play: [id: string] }>()
+const emit = defineEmits<{ import: [files: File[]]; play: [id: string]; search: [keyword: string]; reload: []; page: [page: number] }>()
 const fileInput = ref<HTMLInputElement>()
 const query = ref('')
 const filteredTracks = computed(() => {
+  if (props.source === 'online') return props.tracks
   const keyword = query.value.trim().toLowerCase()
   return props.tracks.filter((track) =>
     `${track.title} ${track.artist} ${track.fileName}`.toLowerCase().includes(keyword),
@@ -31,7 +38,7 @@ const onFiles = (event: Event) => {
     <header class="music-library__header">
       <div>
         <h1>{{ source === 'local' ? '本地音乐' : '在线音乐' }}</h1>
-        <p>{{ source === 'local' ? `${tracks.length} 首歌曲` : '发现更多好音乐' }}</p>
+        <p>{{ source === 'local' ? `${tracks.length} 首歌曲` : `曲库共 ${total} 首歌曲` }}</p>
       </div>
       <button
         v-if="source === 'local'"
@@ -42,6 +49,7 @@ const onFiles = (event: Event) => {
         <MusicIcon name="plus" />
         添加音乐
       </button>
+      <button v-else class="music-library__add" type="button" :disabled="listLoading" @click="emit('reload')">刷新</button>
       <input
         ref="fileInput"
         class="music-library__file"
@@ -53,22 +61,28 @@ const onFiles = (event: Event) => {
       />
     </header>
 
-    <template v-if="source === 'local'">
-      <label class="music-library__search">
+    <div class="music-library__body">
+      <form class="music-library__search" role="search" @submit.prevent="source === 'online' && emit('search', query)">
         <MusicIcon name="search" />
         <input
           v-model="query"
           type="search"
           placeholder="搜索歌曲、歌手"
-          aria-label="搜索本地歌曲"
+          :aria-label="source === 'local' ? '搜索本地歌曲' : '搜索在线歌曲'"
           :spellcheck="false"
+          maxlength="254"
         />
-      </label>
-      <div v-if="!tracks.length" class="music-library__empty">
+        <button v-if="source === 'online'" type="submit" :disabled="listLoading">搜索</button>
+      </form>
+      <div v-if="source === 'online' && listLoading" class="music-library__empty" role="status">正在加载曲库…</div>
+      <div v-else-if="source === 'online' && listError" class="music-library__empty" role="alert">
+        <p>{{ listError }}</p><button class="music-library__add" type="button" @click="emit('reload')">重试</button>
+      </div>
+      <div v-else-if="!tracks.length" class="music-library__empty">
         <MusicIcon name="music" />
-        <h2>把喜欢的音乐带进来</h2>
-        <p>点击「添加音乐」选择本地音频。</p>
-        <p>可同时选择同名歌词和封面，自动匹配。</p>
+        <h2>{{ source === 'local' ? '把喜欢的音乐带进来' : '暂无相关歌曲' }}</h2>
+        <template v-if="source === 'local'"><p>点击「添加音乐」选择本地音频。</p><p>可同时选择同名歌词和封面，自动匹配。</p></template>
+        <p v-else>试试其他关键词，或稍后刷新曲库。</p>
       </div>
       <p v-else-if="!filteredTracks.length" class="music-library__empty" role="status">
         没有找到相关歌曲
@@ -108,18 +122,15 @@ const onFiles = (event: Event) => {
           </button>
         </li>
       </ol>
-      <p class="music-library__hint">文件仅在本地播放，关闭音乐应用后需重新添加。</p>
-    </template>
-    <div v-else class="music-library__empty">
-      <MusicIcon name="cloud" />
-      <h2>在线音乐，敬请期待</h2>
-      <p>在线服务接入后，可在这里搜索和播放。</p>
-      <p>现在可以先听听本地音乐。</p>
+      <p v-if="source === 'local'" class="music-library__hint">文件仅在本地播放，关闭音乐应用后需重新添加。</p>
+      <ContentPagination v-else :page="page" :page-count="pageCount" :total="total" :disabled="listLoading || !!listError" @change="emit('page', $event)" />
     </div>
   </section>
 </template>
 
 <style scoped lang="scss">
+.music-library__body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.music-library__search button { border: 0; background: transparent; color: #6b4fc2; cursor: pointer; white-space: nowrap; font-size: 12px; }
 .music-library {
   display: flex;
   flex-direction: column;

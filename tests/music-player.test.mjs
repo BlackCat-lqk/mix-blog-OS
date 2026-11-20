@@ -131,6 +131,66 @@ const flush = async () => {
   await Vue.nextTick()
 }
 
+const onlineSong = (id, lyricsUrl = '') => ({
+  id, title: `在线${id}`, artist: '歌手', source: 'online', fileName: '', url: `/uploads/music/${id}.mp3`,
+  coverUrl: '', lyricsUrl, duration: 120, album: '', description: '', status: 'active', sortOrder: 0,
+})
+
+test('在线和本地队列独立切歌，搜索分页时保留正在播放的歌曲', async (t) => {
+  const { player, audio } = fixture(t)
+  await player.importFiles([file('local-a.mp3'), file('local-b.mp3')])
+  player.setOnlineTracks([onlineSong('a'), onlineSong('b')])
+  player.selectTrack('a')
+  assert.equal(audio.src, '/uploads/music/a.mp3'); assert.equal(player.isPlaying.value, true)
+  player.next(); assert.equal(player.currentId.value, 'b')
+  player.next(); assert.equal(player.currentId.value, 'a')
+  player.setOnlineTracks([onlineSong('c')])
+  assert.equal(player.currentId.value, 'a'); assert.equal(player.isPlaying.value, true)
+  player.next(); assert.equal(player.currentId.value, 'c')
+  const local = player.tracks.value.find((track) => track.source === 'local')
+  player.cycleMode(); player.cycleMode(); player.selectTrack(local.id)
+  player.next(); assert.equal(player.currentTrack.value.source, 'local')
+  player.previous(); assert.equal(player.currentTrack.value.source, 'local')
+})
+
+test('在线歌词错误不阻断播放，切歌取消旧歌词请求并支持重试', async (t) => {
+  const original = global.fetch
+  t.after(() => { global.fetch = original })
+  let firstResolve, firstSignal, succeed = false
+  global.fetch = (url, { signal }) => {
+    if (url.endsWith('a.lrc')) {
+      firstSignal = signal
+      return new Promise((resolve) => { firstResolve = resolve })
+    }
+    return Promise.resolve({ ok: succeed, text: async () => '[00:01.00]中文在线歌词' })
+  }
+  const { player } = fixture(t)
+  player.setOnlineTracks([onlineSong('a', '/uploads/music/a.lrc'), onlineSong('b', '/uploads/music/b.lrc')])
+  player.selectTrack('a'); assert.equal(player.lyricsLoading.value, true)
+  player.selectTrack('b'); assert.equal(firstSignal.aborted, true)
+  await flush(); await flush()
+  assert.equal(player.isPlaying.value, true); assert.match(player.lyricsError.value, /歌词加载失败/)
+  firstResolve({ ok: true, text: async () => '[00:00.00]过期歌词' }); await flush(); await flush()
+  assert.equal(player.currentTrack.value.lyrics.text, '')
+  succeed = true; player.retryLyrics(); await flush(); await flush()
+  assert.equal(player.lyricsError.value, ''); assert.equal(player.currentTrack.value.lyrics.lines[0].text, '中文在线歌词')
+})
+
+test('刷新曲库期间返回的歌词应用到最新记录，关闭后取消加载', async (t) => {
+  const original = global.fetch
+  t.after(() => { global.fetch = original })
+  let resolve, signal
+  global.fetch = (_url, options) => { signal = options.signal; return new Promise((done) => { resolve = done }) }
+  const { player, app } = fixture(t)
+  player.setOnlineTracks([onlineSong('a', '/uploads/music/a.lrc')]); player.selectTrack('a')
+  player.setOnlineTracks([{ ...onlineSong('a', '/uploads/music/a.lrc'), title: '更新的歌曲名' }])
+  resolve({ ok: true, text: async () => '[00:00.00]歌词' }); await flush(); await flush()
+  assert.equal(player.currentTrack.value.title, '更新的歌曲名'); assert.equal(player.currentTrack.value.lyrics.lines.length, 1)
+  player.retryLyrics(); app.unmount(); assert.equal(signal.aborted, true)
+  resolve({ ok: true, text: async () => '[00:00.00]迟到歌词' }); await flush(); await flush()
+  assert.equal(player.currentTrack.value.lyrics.lines[0].text, '歌词')
+})
+
 test('解析多时间标签、偏移、空行和纯文本，并查找当前歌词', () => {
   const lyrics = parseLyrics(
     '[ti:测试]\n[00:01.50][01:02.125]第一句\n[00:03.00][和声]\n[00:05.00]\n[offset:500]',

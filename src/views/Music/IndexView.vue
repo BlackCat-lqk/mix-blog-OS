@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { AppWindowProps, MusicSource, WindowSidebarItem } from '@/tsInterface/index'
 import OsWindow from '@/components/OsWindow/index.vue'
 import WindowSidebar from '@/components/OsWindow/WindowSidebar.vue'
 import localIcon from '@/assets/icons/music-local.svg'
 import onlineIcon from '@/assets/icons/music-online.svg'
-import musicIcon from '@/assets/icons/app/music.svg'
+import musicIcon from '@/assets/icons/app/music.png'
 import MusicLibrary from './components/MusicLibrary.vue'
 import NowPlaying from './components/NowPlaying.vue'
 import { useMusicPlayer } from './useMusicPlayer'
+import { useContentList } from '@/composables/useContentList'
 
 withDefaults(defineProps<AppWindowProps>(), {
   title: '音乐',
@@ -33,6 +34,8 @@ const {
   volume,
   mode,
   error,
+  lyricsLoading,
+  lyricsError,
   importFiles,
   attachLyrics,
   attachCover,
@@ -43,7 +46,16 @@ const {
   togglePlayback,
   next,
   previous,
+  setOnlineTracks,
+  retryLyrics,
 } = useMusicPlayer()
+const { items: onlineItems, total: onlineTotal, loading: onlineLoading, error: onlineError, query: onlineQuery, pageCount, load: loadOnline, changePage } = useContentList('music')
+const libraryTracks = computed(() => source.value === 'local'
+  ? tracks.value.filter((track) => track.source === 'local')
+  : onlineItems.value.map((item) => tracks.value.find((track) => track.id === item.id)).filter((track) => track !== undefined))
+watch(onlineItems, setOnlineTracks)
+watch(source, (value) => { if (value === 'online') void loadOnline() })
+function searchOnline(keyword: string) { onlineQuery.keyword = keyword.trim(); onlineQuery.page = 1; void loadOnline() }
 </script>
 
 <template>
@@ -64,11 +76,19 @@ const {
       <div class="music-columns">
         <MusicLibrary
           :source="source"
-          :tracks="tracks"
+          :tracks="libraryTracks"
           :current-id="currentId"
           :is-playing="isPlaying"
+          :list-loading="onlineLoading"
+          :list-error="onlineError"
+          :total="onlineTotal"
+          :page="onlineQuery.page"
+          :page-count="pageCount"
           @import="importFiles"
           @play="selectTrack"
+          @search="searchOnline"
+          @reload="loadOnline"
+          @page="changePage"
         />
         <NowPlaying
           :track="currentTrack"
@@ -79,6 +99,8 @@ const {
           :volume="volume"
           :mode="mode"
           :error="error"
+          :lyrics-loading="lyricsLoading"
+          :lyrics-error="lyricsError"
           :visible="!minimized && visible"
           @toggle="togglePlayback"
           @next="next"
@@ -88,6 +110,7 @@ const {
           @volume="setVolume"
           @lyrics="attachLyrics"
           @cover="attachCover"
+          @retry-lyrics="retryLyrics"
         />
       </div>
     </div>

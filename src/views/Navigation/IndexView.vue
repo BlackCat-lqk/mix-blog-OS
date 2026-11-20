@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { AppWindowProps } from '@/tsInterface/index'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import type { AppWindowProps, NavigationCategory } from '@/tsInterface/index'
 import OsWindow from '@/components/OsWindow/index.vue'
-import { categories } from './data'
+import { getNavigationTree } from '@/server/content'
 
 withDefaults(defineProps<AppWindowProps>(), {
   title: '导航',
@@ -10,14 +10,41 @@ withDefaults(defineProps<AppWindowProps>(), {
 })
 const minimized = defineModel<boolean>('minimized', { default: false })
 const emit = defineEmits<{ activate: []; close: [] }>()
-const selectedId = ref(categories[0]?.children[0]?.id ?? '')
+const categories = ref<NavigationCategory[]>([])
+const loading = ref(false)
+const error = ref('')
+const selectedId = ref('')
 const selectedCategory = computed(() =>
-  categories.find((category) => category.children.some((child) => child.id === selectedId.value)),
+  categories.value.find((category) => category.children.some((child) => child.id === selectedId.value)),
 )
 const selectedSubcategory = computed(() =>
   selectedCategory.value?.children.find((child) => child.id === selectedId.value),
 )
 const failedIcons = ref(new Set<string>())
+let controller: AbortController | undefined
+async function load() {
+  controller?.abort()
+  const current = new AbortController()
+  controller = current
+  loading.value = true
+  error.value = ''
+  categories.value = []
+  try {
+    const result = await getNavigationTree(current.signal)
+    if (current.signal.aborted) return
+    categories.value = result
+    if (!result.some((category) => category.children.some((child) => child.id === selectedId.value))) {
+      selectedId.value = result.find((category) => category.children.length)?.children[0]?.id ?? ''
+    }
+    failedIcons.value.clear()
+  } catch (cause) {
+    if (!current.signal.aborted) error.value = cause instanceof Error ? cause.message : '导航加载失败'
+  } finally {
+    if (!current.signal.aborted) loading.value = false
+  }
+}
+onMounted(load)
+onBeforeUnmount(() => controller?.abort())
 </script>
 
 <template>
@@ -57,11 +84,14 @@ const failedIcons = ref(new Set<string>())
       <header class="navigation-content__header">
         <span class="navigation-content__parent">{{ selectedCategory?.title }}</span>
         <div class="navigation-content__heading">
-          <h1>{{ selectedSubcategory?.title }}</h1>
+          <h1>{{ selectedSubcategory?.title || '网站导航' }}</h1>
           <span>{{ selectedSubcategory?.sites.length ?? 0 }} 个网站</span>
+          <button type="button" :disabled="loading" @click="load">刷新</button>
         </div>
       </header>
-      <div :key="selectedId" class="website-grid">
+      <p v-if="loading" role="status">正在加载导航…</p>
+      <p v-else-if="error" role="alert">{{ error }} <button type="button" @click="load">重试</button></p>
+      <div v-else :key="selectedId" class="website-grid">
         <a
           v-for="site in selectedSubcategory?.sites"
           :key="site.id"
@@ -73,7 +103,7 @@ const failedIcons = ref(new Set<string>())
           <div class="website-card__header">
             <div class="website-card__icon">
               <img
-                v-if="!failedIcons.has(site.id)"
+                v-if="site.icon && !failedIcons.has(site.id)"
                 :src="site.icon"
                 alt=""
                 width="32"
@@ -89,7 +119,7 @@ const failedIcons = ref(new Set<string>())
           <p class="website-card__description" :title="site.description">{{ site.description }}</p>
         </a>
         <p v-if="!selectedSubcategory?.sites.length" class="navigation-content__empty">
-          该分类下暂无网站
+          {{ categories.length ? '该分类下暂无网站' : '暂无导航分类和网站' }}
         </p>
       </div>
     </section>
@@ -97,6 +127,7 @@ const failedIcons = ref(new Set<string>())
 </template>
 
 <style scoped lang="scss">
+.navigation-content button { padding: 6px 10px; border: 1px solid #8884; border-radius: 6px; background: transparent; color: inherit; cursor: pointer; font-size: 12px; }
 .navigation-sidebar {
   flex: 0 0 clamp(112px, 22%, 180px);
   min-width: 0;

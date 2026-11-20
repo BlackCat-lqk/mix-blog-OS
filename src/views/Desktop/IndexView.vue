@@ -12,7 +12,7 @@
     <div class="desktop" :inert="applicationsOpen">
       <div class="desktop-app">
         <button
-          v-for="app in appConfig"
+          v-for="app in availableApps"
           :key="app.enName"
           class="app-item"
           type="button"
@@ -46,7 +46,7 @@
 
     <ApplicationsOverview
       v-if="applicationsOpen"
-      :apps="appConfig"
+      :apps="availableApps"
       @close="applicationsOpen = false"
       @launch="launchApp"
     />
@@ -68,12 +68,18 @@ import { ref, watch, computed, defineAsyncComponent, onMounted, onUnmounted, pro
 import appConfig from '@/config/index'
 import type { AppItem, SettingsNavigation } from '@/tsInterface/index'
 import { useWallpaperStore } from '@/stores/wallpaper'
+import { useUserInfoStore } from '@/stores/userInfo'
 import defaultWallpaper1 from '@/assets/setting/images/wallpaper/default-wallpaper1.jpg'
 import DesktopSidebar from '@/components/Desktop/DesktopSidebar.vue'
 import { useDesktopWindows } from '@/components/Desktop/useDesktopWindows'
 import { windowBoundsKey } from '@/components/OsWindow/windowBounds'
 
 const store = useWallpaperStore()
+const userStore = useUserInfoStore()
+const availableApps = computed(() => appConfig.filter((app) =>
+  (!app.requiresAuth || userStore.isAuthenticated)
+  && (!app.requiresAdmin || (userStore.isAuthenticated && userStore.data.user.role === 'admin')),
+))
 const applicationsOpen = ref(false)
 const desktopSidebar = ref<InstanceType<typeof DesktopSidebar>>()
 const sidebarOffset = 8
@@ -96,7 +102,7 @@ const settingsNavigation = ref<SettingsNavigation>()
 
 const activeApps = computed(() =>
   windows.value.flatMap((window) => {
-    const app = appConfig.find((item) => item.enName === window.id)
+    const app = availableApps.value.find((item) => item.enName === window.id)
     return app ? [{ ...app, window }] : []
   }),
 )
@@ -127,11 +133,13 @@ onMounted(() => window.addEventListener('resize', updateViewport))
 onUnmounted(() => window.removeEventListener('resize', updateViewport))
 
 const openApp = (app: AppItem) => {
+  if (!availableApps.value.some((item) => item.enName === app.enName)) return
   applicationsOpen.value = false
   openWindow(app.enName)
 }
 
 const activateApp = (id: string) => {
+  if (!availableApps.value.some((item) => item.enName === id)) return
   if (applicationsOpen.value) {
     applicationsOpen.value = false
     openWindow(id)
@@ -146,7 +154,7 @@ const returnToDesktop = () => {
 }
 
 const launchApp = (id: string) => {
-  const app = appConfig.find((item) => item.enName === id)
+  const app = availableApps.value.find((item) => item.enName === id)
   if (!app) return
   openApp(app)
 }
@@ -157,6 +165,15 @@ const openPersonalization = () => {
   settingsNavigation.value = { section: 'personalization' }
   openApp(app)
 }
+
+watch(
+  availableApps,
+  (apps) => {
+    windows.value.filter((window) => !apps.some((app) => app.enName === window.id))
+      .forEach((window) => closeWindow(window.id))
+  },
+  { flush: 'sync' },
+)
 
 watch(
   () => store.initialized,

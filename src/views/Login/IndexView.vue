@@ -15,7 +15,7 @@
         <button
           class="login-modal__close"
           type="button"
-          :disabled="loading"
+          :disabled="loading || sendingCode"
           aria-label="关闭弹窗"
           @click="close"
         >
@@ -44,11 +44,31 @@
                 autocomplete="email"
                 placeholder="请输入邮箱帐号"
                 :error="errors.email"
-                :disabled="loading"
-                :icon="iconAccount"
+                :disabled="loading || sendingCode"
+                :icon="iconEmail"
                 @blur="validateField('email')"
                 @update:model-value="revalidateField('email')"
               />
+              <div v-if="isRegister" class="email-verification">
+                <LoginInput
+                  v-model="form.verificationCode"
+                  label="邮箱验证码"
+                  inputmode="numeric"
+                  autocomplete="one-time-code"
+                  placeholder="请输入邮件中的 6 位验证码"
+                  :maxlength="6"
+                  :error="errors.verificationCode"
+                  :disabled="loading"
+                  :icon="iconEmail"
+                  @blur="validateField('verificationCode')"
+                  @update:model-value="revalidateField('verificationCode')"
+                />
+                <button class="email-verification__send" type="button" :disabled="loading || sendingCode || codeRemaining > 0" @click="sendCode">
+                  {{ sendingCode ? '发送中…' : codeRemaining > 0 ? `${codeRemaining} 秒后重发` : '发送验证码' }}
+                </button>
+                <p v-if="codeError && codeError !== errors.email" class="login-form__error" role="alert">{{ codeError }}</p>
+                <p v-else-if="codeMessage" class="login-form__success" role="status">{{ codeMessage }}</p>
+              </div>
               <LoginInput
                 v-if="isRegister"
                 v-model="form.userName"
@@ -74,18 +94,6 @@
                 @blur="validateField('password')"
                 @update:model-value="revalidateField('password')"
               />
-              <LoginInput
-                v-if="isRegister"
-                v-model="form.invitationCode"
-                label="邀请码"
-                inputmode="numeric"
-                placeholder="请输入 6 位数字邀请码"
-                :error="errors.invitationCode"
-                :disabled="loading"
-                :icon="iconPassword"
-                @blur="validateField('invitationCode')"
-                @update:model-value="revalidateField('invitationCode')"
-              />
               <p v-if="submitError" class="login-form__error" role="alert">{{ submitError }}</p>
               <p v-if="successMessage" class="login-form__success" role="status">
                 {{ successMessage }}
@@ -95,7 +103,7 @@
                 <button
                   type="button"
                   class="login-form__register"
-                  :disabled="loading"
+                  :disabled="loading || sendingCode"
                   @click.stop="switchMode"
                 >
                   {{ isRegister ? "返回登录" : "注 册" }}
@@ -105,7 +113,7 @@
                   type="submit"
                   class="login-form__submit"
                   :class="{ 'login-form__submit--loading': loading }"
-                  :disabled="loading"
+                  :disabled="loading || sendingCode"
                 >
                   {{ loading ? "提交中…" : isRegister ? "注 册" : "登 录" }}
                 </button>
@@ -118,19 +126,21 @@
   </Teleport>
 </template>
 <script setup lang="ts">
-import { ref, reactive, useId, watch } from "vue";
+import { computed, ref, reactive, useId, watch } from "vue";
 import { useUserInfoStore } from "@/stores/userInfo.ts";
 import logoIcon from "@/assets/icons/logo-light.svg";
 import { loginUserApi, registerUserApi } from "@/server/user.ts";
-import iconAccount from "@/assets/icons/account-light.svg";
-import iconPassword from "@/assets/icons/password-light.svg";
+import iconAccount from "@/assets/icons/user.png";
+import iconPassword from "@/assets/icons/password.png";
+import iconEmail from "@/assets/icons/email.png";
 import LoginInput from "./components/LoginInput.vue";
 import closeIcon from "@/assets/icons/close-light.svg";
+import { useEmailVerification } from "@/composables/useEmailVerification";
 import {
   validateEmail,
   validateUserName,
   validatePassword,
-  validateInvitationCode,
+  validateVerificationCode,
 } from "@/utils/validation";
 const emit = defineEmits(["loginStatus", "update:visible", "close"]);
 
@@ -145,8 +155,13 @@ const userInfoStore = useUserInfoStore();
 const titleId = useId();
 // ---- 表单状态 ----
 const isRegister = ref(false);
-const form = reactive({ email: "", userName: "", password: "", invitationCode: "" });
-const errors = reactive({ email: "", userName: "", password: "", invitationCode: "" });
+const form = reactive({ email: "", userName: "", password: "", verificationCode: "" });
+const errors = reactive({ email: "", userName: "", password: "", verificationCode: "" });
+const {
+  sending: sendingCode, remaining: codeRemaining, error: codeError, message: codeMessage,
+  send: sendCode, cancel: cancelCode,
+} = useEmailVerification(computed(() => form.email));
+watch(() => form.email.trim().toLowerCase(), () => { form.verificationCode = ""; errors.verificationCode = ""; });
 type FormField = keyof typeof form;
 const loading = ref(false);
 const submitError = ref("");
@@ -157,7 +172,7 @@ const validators = {
   email: validateEmail,
   userName: validateUserName,
   password: validatePassword,
-  invitationCode: validateInvitationCode,
+  verificationCode: validateVerificationCode,
 };
 const validateField = (field: FormField) => {
   errors[field] = validators[field](form[field]);
@@ -170,13 +185,13 @@ const revalidateField = (field: FormField) => {
 };
 const validate = (): boolean => {
   const fields: FormField[] = isRegister.value
-    ? ["email", "userName", "password", "invitationCode"]
+    ? ["email", "userName", "password", "verificationCode"]
     : ["email", "password"];
   return fields.map(validateField).every(Boolean);
 };
 // ---- 表单提交 ----
 const handleSubmit = async () => {
-  if (loading.value || !validate()) return;
+  if (loading.value || sendingCode.value || !validate()) return;
 
   loading.value = true;
   submitError.value = "";
@@ -192,7 +207,7 @@ const handleSubmit = async () => {
       switchMode();
       form.password = "";
       form.userName = "";
-      form.invitationCode = "";
+      form.verificationCode = "";
       successMessage.value = "注册成功，请登录";
       return;
     }
@@ -229,6 +244,8 @@ const clearErrors = () => {
   successMessage.value = "";
 };
 const switchMode = () => {
+  cancelCode();
+  form.verificationCode = "";
   isRegister.value = !isRegister.value;
   clearErrors();
 };
@@ -237,6 +254,7 @@ watch(
   () => props.visible,
   (visible) => {
     if (visible) return;
+    cancelCode();
     isRegister.value = false;
     for (const field of Object.keys(form) as FormField[]) form[field] = "";
     clearErrors();
@@ -244,12 +262,21 @@ watch(
 );
 
 const close = () => {
-  if (loading.value) return;
+  if (loading.value || sendingCode.value) return;
   emit("update:visible", false);
   emit("close", false);
 };
 </script>
 <style scoped lang="scss">
+.email-verification { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; }
+.email-verification > p { grid-column: 1 / -1; }
+.email-verification__send { margin-top: 24px; height: 48px; padding: 0 12px; border: 1px solid #0067c0; border-radius: 10px; background: #0067c0; color: white; font-size: 12px; white-space: nowrap; cursor: pointer; }
+.email-verification__send:disabled { opacity: .5; cursor: default; }
+.email-verification__send:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+@media (max-width: 420px) {
+  .email-verification { grid-template-columns: minmax(0, 1fr); }
+  .email-verification__send { margin-top: 0; height: 40px; }
+}
 // 公共变量
 $card-bg: #181818;
 $card-border: rgba(255, 255, 255, 0.1);

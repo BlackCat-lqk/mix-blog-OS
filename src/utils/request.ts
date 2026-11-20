@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useUserInfoStore } from "@/stores/userInfo";
 
 const service = axios.create({
   baseURL: "/api",
@@ -29,16 +30,21 @@ service.interceptors.response.use(
     if (res.data.code === 200) {
       return res;
     } else {
+      if (res.data.code === 401) useUserInfoStore().removeUserInfo();
       return Promise.reject(new Error(res.data.message || "Unknown error"));
     }
   },
   (error) => {
+    if (error.response?.status === 401) useUserInfoStore().removeUserInfo();
     const payload = error.response?.data as
       | { data?: { message?: string }; message?: string }
       | undefined;
     const msg =
       payload?.data?.message ?? payload?.message ?? error.message ?? "网络异常，请稍后再试";
-    return Promise.reject(new Error(msg));
+    const retryAfter = Number(error.response?.headers?.["retry-after"]);
+    return Promise.reject(Object.assign(new Error(msg), {
+      retryAfter: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
+    }));
   },
 );
 

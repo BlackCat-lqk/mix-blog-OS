@@ -13,6 +13,8 @@ const props = defineProps<{
   volume: number
   mode: MusicPlayMode
   error: string
+  lyricsLoading: boolean
+  lyricsError: string
   visible: boolean
 }>()
 const emit = defineEmits<{
@@ -24,6 +26,7 @@ const emit = defineEmits<{
   volume: [value: number]
   lyrics: [file: File]
   cover: [file: File]
+  retryLyrics: []
 }>()
 const coverInput = ref<HTMLInputElement>()
 const lyricInput = ref<HTMLInputElement>()
@@ -65,14 +68,14 @@ watch(
       <button
         class="now-playing__cover"
         type="button"
-        :disabled="!track"
+        :disabled="!track || track.source === 'online'"
         title="选择当前歌曲的封面"
         aria-label="选择当前歌曲的封面"
         @click="coverInput?.click()"
       >
         <img v-if="track?.coverUrl" :src="track.coverUrl" alt="歌曲封面" width="96" height="96" />
         <MusicIcon v-else name="music" />
-        <span v-if="track" class="now-playing__cover-label">更换封面</span>
+        <span v-if="track?.source === 'local'" class="now-playing__cover-label">更换封面</span>
       </button>
       <input
         ref="coverInput"
@@ -85,13 +88,13 @@ watch(
       <div class="now-playing__info">
         <span class="now-playing__eyebrow">{{ isPlaying ? '正在播放' : '当前歌曲' }}</span>
         <h2>{{ track?.title || '等待一首好音乐' }}</h2>
-        <p>{{ track?.artist || '添加本地音乐，开始聆听' }}</p>
+        <p>{{ track?.artist || '选择歌曲，开始聆听' }}</p>
       </div>
     </header>
 
     <div class="now-playing__lyrics-header">
       <span>歌词</span>
-      <button type="button" :disabled="!track" @click="lyricInput?.click()">导入歌词</button>
+      <button v-if="track?.source !== 'online'" type="button" :disabled="!track" @click="lyricInput?.click()">导入歌词</button>
       <input
         ref="lyricInput"
         class="now-playing__file"
@@ -102,7 +105,9 @@ watch(
       />
     </div>
     <div ref="lyricsBody" class="now-playing__lyrics" aria-label="歌曲歌词">
-      <template v-if="track?.lyrics.lines.length">
+      <p v-if="lyricsLoading" role="status">正在加载歌词…</p>
+      <div v-else-if="lyricsError" role="alert">{{ lyricsError }} <button type="button" @click="emit('retryLyrics')">重试</button></div>
+      <template v-else-if="track?.lyrics.lines.length">
         <button
           v-for="(line, index) in track.lyrics.lines"
           :key="index"
@@ -119,7 +124,7 @@ watch(
       <p v-else-if="track?.lyrics.text" class="now-playing__plain">{{ track.lyrics.text }}</p>
       <div v-else class="now-playing__no-lyrics">
         <p>{{ track ? '在旋律里，慢慢听' : '音乐与歌词，即将在这里相遇' }}</p>
-        <span>{{ track ? '导入 LRC 歌词，跟随音乐同步显示' : '从左侧添加一首喜欢的歌曲' }}</span>
+        <span>{{ track?.source === 'online' ? '这首歌曲暂无歌词' : track ? '导入 LRC 歌词，跟随音乐同步显示' : '选择一首喜欢的歌曲' }}</span>
       </div>
     </div>
 
@@ -476,6 +481,9 @@ watch(
   input:disabled {
     cursor: default;
     opacity: 0.4;
+  }
+  button.now-playing__cover:disabled {
+    opacity: 1;
   }
   button:focus-visible,
   input:focus-visible {

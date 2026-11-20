@@ -1,7 +1,7 @@
 /** 公共表单校验：返回空字符串表示通过，否则返回错误提示。 */
 export function validateEmail(value: string): string {
   if (!value.trim()) return "请输入邮箱";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return "请输入有效的邮箱地址";
+  if (value.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return "请输入有效的邮箱地址";
   return "";
 }
 
@@ -19,8 +19,8 @@ export function validatePassword(value: string): string {
   return "";
 }
 
-export function validateInvitationCode(value: string): string {
-  if (!value) return "请输入邀请码";
-  if (value.length !== 6 || /[^0-9]/.test(value)) return "邀请码必须是 6 位数字";
+export function validateVerificationCode(value: string): string {
+  if (!value) return "请输入邮箱验证码";
+  if (value.length !== 6 || /[^0-9]/.test(value)) return "邮箱验证码必须是 6 位数字";
   return "";
 }

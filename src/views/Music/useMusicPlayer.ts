@@ -1,5 +1,5 @@
 import { computed, onUnmounted, ref } from 'vue'
-import type { MusicPlayMode, MusicTrack } from '@/tsInterface/index'
+import type { MusicPlayMode, MusicTrack, OnlineMusic } from '@/tsInterface/index'
 import { parseLyrics } from './lyrics'
 
 const audioExtension = /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|webm|mp4|aiff?)$/i
@@ -27,6 +27,8 @@ export function useMusicPlayer() {
   const volume = ref(0.7)
   const mode = ref<MusicPlayMode>('loop')
   const error = ref('')
+  const lyricsLoading = ref(false)
+  const lyricsError = ref('')
   const audio = new Audio()
   audio.preload = 'metadata'
   audio.volume = volume.value
@@ -41,6 +43,29 @@ export function useMusicPlayer() {
   let shuffleBag: string[] = []
   let history: string[] = []
   let historyIndex = -1
+  let lyricsController: AbortController | undefined
+  const queue = computed(() => tracks.value.filter((track) => track.source === currentTrack.value?.source))
+
+  const loadOnlineLyrics = async (track = currentTrack.value) => {
+    lyricsController?.abort()
+    lyricsLoading.value = false
+    lyricsError.value = ''
+    if (!track?.lyricsUrl || track.source !== 'online' || disposed) return
+    const controller = new AbortController()
+    lyricsController = controller
+    lyricsLoading.value = true
+    try {
+      const response = await fetch(track.lyricsUrl, { signal: controller.signal })
+      if (!response.ok) throw new Error('歌词加载失败，请重试')
+      const text = await response.text()
+      const target = tracks.value.find((item) => item.id === track.id && item.lyricsUrl === track.lyricsUrl)
+      if (!disposed && !controller.signal.aborted && target) target.lyrics = parseLyrics(text)
+    } catch (cause) {
+      if (!disposed && !controller.signal.aborted) lyricsError.value = cause instanceof Error ? cause.message : '歌词加载失败，请重试'
+    } finally {
+      if (!disposed && !controller.signal.aborted) lyricsLoading.value = false
+    }
+  }
 
   const createUrl = (file: File) => {
     const url = URL.createObjectURL(file)
@@ -85,6 +110,7 @@ export function useMusicPlayer() {
   const selectTrack = (id: string, autoplay = true, record = true) => {
     const track = tracks.value.find((item) => item.id === id)
     if (!track || disposed) return
+    if (currentTrack.value && currentTrack.value.source !== track.source) { history = []; historyIndex = -1; shuffleBag = [] }
     if (record) remember(id)
     if (currentId.value !== id) {
       pause()
@@ -94,6 +120,11 @@ export function useMusicPlayer() {
       error.value = ''
       audio.src = track.url
       audio.load()
+      lyricsController?.abort()
+      lyricsLoading.value = false
+      lyricsError.value = ''
+      shuffleBag = shuffleBag.filter((item) => queue.value.some((entry) => entry.id === item))
+      if (track.source === 'online' && !track.lyrics.text) void loadOnlineLyrics(track)
     }
     if (autoplay) void play()
   }
@@ -105,7 +136,7 @@ export function useMusicPlayer() {
   }
 
   const step = (direction: 1 | -1) => {
-    if (!tracks.value.length) return
+    if (!queue.value.length) return
     let target: string | undefined
     let record = true
     if (mode.value === 'shuffle') {
@@ -119,15 +150,15 @@ export function useMusicPlayer() {
       } else {
         if (!shuffleBag.length) {
           shuffleBag = shuffled(
-            tracks.value.map((track) => track.id).filter((id) => id !== currentId.value),
+            queue.value.map((track) => track.id).filter((id) => id !== currentId.value),
           )
         }
         target = shuffleBag.pop() ?? currentId.value
       }
     } else {
-      const index = tracks.value.findIndex((track) => track.id === currentId.value)
-      const targetIndex = (index + direction + tracks.value.length) % tracks.value.length
-      target = tracks.value[targetIndex]?.id
+      const index = queue.value.findIndex((track) => track.id === currentId.value)
+      const targetIndex = (index + direction + queue.value.length) % queue.value.length
+      target = queue.value[targetIndex]?.id
     }
     if (!target) return
     if (target === currentId.value) seek(0)
@@ -140,7 +171,7 @@ export function useMusicPlayer() {
     history = currentId.value ? [currentId.value] : []
     historyIndex = history.length - 1
     shuffleBag = shuffled(
-      tracks.value.map((track) => track.id).filter((id) => id !== currentId.value),
+      queue.value.map((track) => track.id).filter((id) => id !== currentId.value),
     )
   }
 
@@ -216,10 +247,11 @@ export function useMusicPlayer() {
     }
     if (!supported && files.length) error.value = '请选择音频、LRC 歌词或封面图片。'
     else if (supported) error.value = ''
-    shuffleBag = shuffled([...shuffleBag, ...added])
+    if (!currentTrack.value || currentTrack.value.source === 'local') shuffleBag = shuffled([...shuffleBag, ...added])
     if (!currentId.value && tracks.value[0]) selectTrack(tracks.value[0].id, false)
     const lyrics: Promise<void>[] = []
     for (const track of tracks.value) {
+      if (track.source !== 'local') continue
       const key = assetKey(track.fileName)
       const cover = coverFiles.get(key)
       if (cover && (!track.coverUrl || changedCovers.has(key))) track.coverUrl = cover
@@ -228,6 +260,33 @@ export function useMusicPlayer() {
         lyrics.push(attachLyrics(lyric, track.id))
     }
     await Promise.all(lyrics)
+  }
+
+  const setOnlineTracks = (items: OnlineMusic[]) => {
+    if (disposed) return
+    const previous = new Map(tracks.value.filter((track) => track.source === 'online').map((track) => [track.id, track]))
+    const playing = currentTrack.value
+    const online: MusicTrack[] = items.map((item) => ({
+      id: item.id, source: 'online', fileName: item.fileName, title: item.title, artist: item.artist,
+      url: item.url, coverUrl: item.coverUrl, lyricsUrl: item.lyricsUrl, duration: item.duration,
+      lyrics: previous.get(item.id)?.lyricsUrl === item.lyricsUrl ? previous.get(item.id)!.lyrics : { lines: [], text: '' },
+    }))
+    // Keep the current song playing when searching or paging to a different result set.
+    if (playing?.source === 'online' && !online.some((item) => item.id === playing.id)) online.unshift(playing)
+    tracks.value = [...tracks.value.filter((track) => track.source === 'local'), ...online]
+    const ids = new Set(queue.value.map((track) => track.id))
+    history = history.filter((id) => ids.has(id))
+    historyIndex = history.lastIndexOf(currentId.value)
+    shuffleBag = shuffled([...ids].filter((id) => id !== currentId.value))
+    if (playing?.source === 'online') {
+      const updated = currentTrack.value
+      if (updated?.url !== playing.url) {
+        const resume = isPlaying.value
+        pause()
+        currentId.value = ''
+        selectTrack(playing.id, resume)
+      } else if (updated?.lyricsUrl !== playing.lyricsUrl) void loadOnlineLyrics(updated)
+    }
   }
 
   const updateDuration = () => {
@@ -272,6 +331,7 @@ export function useMusicPlayer() {
 
   onUnmounted(() => {
     disposed = true
+    lyricsController?.abort()
     pause()
     for (const [event, handler] of Object.entries(events)) audio.removeEventListener(event, handler)
     audio.removeAttribute('src')
@@ -294,10 +354,14 @@ export function useMusicPlayer() {
     volume,
     mode,
     error,
+    lyricsLoading,
+    lyricsError,
     importFiles,
     attachLyrics,
     attachCover,
     selectTrack,
+    setOnlineTracks,
+    retryLyrics: () => void loadOnlineLyrics(),
     seek,
     setVolume,
     cycleMode,

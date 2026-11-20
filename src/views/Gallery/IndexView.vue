@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { AppWindowProps } from '@/tsInterface/index'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import type { AppWindowProps, ManagedAlbum } from '@/tsInterface/index'
 import OsWindow from '@/components/OsWindow/index.vue'
-import { albums, media } from './data'
+import ContentPagination from '@/components/ContentPagination.vue'
+import { getAllContent } from '@/server/content'
+import { useContentList } from '@/composables/useContentList'
 
 withDefaults(defineProps<AppWindowProps>(), {
   title: '图库',
@@ -11,21 +13,47 @@ withDefaults(defineProps<AppWindowProps>(), {
 const minimized = defineModel<boolean>('minimized', { default: false })
 const emit = defineEmits<{ activate: []; close: [] }>()
 const query = ref('')
+const keyword = ref('')
+const mediaType = ref('')
+const albums = ref<ManagedAlbum[]>([])
+const albumsLoading = ref(false)
+const albumsError = ref('')
+const { items: displayedMedia, total, loading, error, query: mediaQuery, pageCount, load, changePage } = useContentList('gallery/media')
 const selectedAlbumId = ref<string | null>(null)
 const filteredAlbums = computed(() => {
   const keyword = query.value.trim().toLocaleLowerCase()
-  return albums.filter((album) => album.name.toLocaleLowerCase().includes(keyword))
+  return albums.value.filter((album) => album.name.toLocaleLowerCase().includes(keyword))
 })
-const selectedAlbum = computed(() => albums.find((album) => album.id === selectedAlbumId.value))
-const displayedMedia = computed(() => selectedAlbumId.value === null
-  ? media
-  : media.filter((item) => item.albumId === selectedAlbumId.value),
-)
-const albumCounts = computed(() => {
-  const counts = new Map<string, number>()
-  for (const item of media) counts.set(item.albumId, (counts.get(item.albumId) ?? 0) + 1)
-  return counts
-})
+const selectedAlbum = computed(() => albums.value.find((album) => album.id === selectedAlbumId.value))
+let albumsController: AbortController | undefined
+async function loadAlbums() {
+  albumsController?.abort()
+  const controller = new AbortController()
+  albumsController = controller
+  albumsLoading.value = true
+  albumsError.value = ''
+  albums.value = []
+  try {
+    const result = await getAllContent('gallery/albums', controller.signal)
+    if (controller.signal.aborted) return
+    albums.value = result
+    if (selectedAlbumId.value && !result.some((album) => album.id === selectedAlbumId.value)) selectedAlbumId.value = null
+  } catch (cause) {
+    if (!controller.signal.aborted) albumsError.value = cause instanceof Error ? cause.message : '图集加载失败'
+  } finally {
+    if (!controller.signal.aborted) albumsLoading.value = false
+  }
+}
+function searchMedia() {
+  mediaQuery.keyword = keyword.value.trim()
+  mediaQuery.type = mediaType.value || undefined
+  mediaQuery.page = 1
+  void load()
+}
+function refresh() { void loadAlbums(); void load() }
+watch(selectedAlbumId, (id) => { mediaQuery.albumId = id ?? undefined; mediaQuery.page = 1; void load() })
+onMounted(refresh)
+onBeforeUnmount(() => albumsController?.abort())
 
 const selectSearchResult = (event: KeyboardEvent) => {
   if (event.isComposing) return
@@ -75,7 +103,6 @@ const selectSearchResult = (event: KeyboardEvent) => {
             <rect x="14" y="14" width="7" height="7" rx="1.5" />
           </svg>
           <span>Library</span>
-          <span class="gallery-count">{{ media.length }}</span>
         </button>
 
         <h2 class="gallery-sidebar__heading">Albums</h2>
@@ -89,12 +116,16 @@ const selectSearchResult = (event: KeyboardEvent) => {
             :aria-current="selectedAlbumId === album.id ? 'page' : undefined"
             @click="selectedAlbumId = album.id"
           >
-            <img :src="album.thumbnail" alt="" width="40" height="40" decoding="async" />
+            <img v-if="album.thumbnail" :src="album.thumbnail" alt="" width="40" height="40" decoding="async" />
+            <span v-else aria-hidden="true">▧</span>
             <span class="album-button__name" :title="album.name">{{ album.name }}</span>
-            <span class="gallery-count">{{ albumCounts.get(album.id) ?? 0 }}</span>
           </button>
-          <p v-if="!filteredAlbums.length" class="gallery-sidebar__empty" role="status">
-            未找到相册
+          <p v-if="albumsLoading" class="gallery-sidebar__empty" role="status">正在加载图集…</p>
+          <p v-else-if="albumsError" class="gallery-sidebar__empty" role="alert">
+            {{ albumsError }} <button type="button" @click="loadAlbums">重试</button>
+          </p>
+          <p v-else-if="!filteredAlbums.length" class="gallery-sidebar__empty" role="status">
+            {{ query ? '未找到图集' : '暂无图集' }}
           </p>
         </nav>
       </aside>
@@ -106,10 +137,17 @@ const selectSearchResult = (event: KeyboardEvent) => {
           <h1>{{ selectedAlbum?.name ?? 'Library' }}</h1>
           <p>{{ selectedAlbum ? '浏览相册中的图片与媒体' : '全部图片与媒体' }}</p>
         </div>
-        <span class="gallery-content__count">{{ displayedMedia.length }} 项媒体</span>
+        <span class="gallery-content__count">{{ total }} 项媒体</span>
       </header>
-
-      <div class="media-grid">
+      <form class="gallery-toolbar" role="search" @submit.prevent="searchMedia">
+        <input v-model="keyword" type="search" placeholder="搜索媒体名称" aria-label="搜索媒体名称" maxlength="254" />
+        <select v-model="mediaType" aria-label="媒体类型"><option value="">全部媒体</option><option value="image">图片</option><option value="video">视频</option></select>
+        <button type="submit" :disabled="loading">搜索</button>
+        <button type="button" :disabled="loading || albumsLoading" @click="refresh">刷新</button>
+      </form>
+      <p v-if="loading" class="gallery-content__empty" role="status">正在加载媒体…</p>
+      <p v-else-if="error" class="gallery-content__empty" role="alert">{{ error }} <button type="button" @click="load">重试</button></p>
+      <div v-else class="media-grid">
         <figure v-for="item in displayedMedia" :key="item.id" class="media-item">
           <a
             v-if="item.type === 'image'"
@@ -119,7 +157,7 @@ const selectSearchResult = (event: KeyboardEvent) => {
             rel="noopener noreferrer"
             :aria-label="`查看原图：${item.title}`"
           >
-            <img :src="item.thumbnail" :alt="item.title" loading="lazy" decoding="async" />
+            <img :src="item.thumbnail || item.src" :alt="item.title" loading="lazy" decoding="async" />
           </a>
           <video
             v-else
@@ -134,14 +172,20 @@ const selectSearchResult = (event: KeyboardEvent) => {
           <figcaption :title="item.title">{{ item.title }}</figcaption>
         </figure>
       </div>
-      <p v-if="!displayedMedia.length" class="gallery-content__empty" role="status">
-        这个相册还没有图片或媒体
+      <p v-if="!loading && !error && !displayedMedia.length" class="gallery-content__empty" role="status">
+        {{ mediaQuery.keyword || mediaQuery.type ? '未找到符合条件的媒体' : '暂无图片或媒体' }}
       </p>
+      <ContentPagination :page="mediaQuery.page" :page-count="pageCount" :total="total" :disabled="loading || !!error" @change="changePage" />
     </section>
   </OsWindow>
 </template>
 
 <style scoped lang="scss">
+.gallery-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.gallery-toolbar input { flex: 1; min-width: 120px; }
+.gallery-toolbar input, .gallery-toolbar select, .gallery-toolbar button { padding: 7px 10px; border: 1px solid #8884; border-radius: 7px; background: transparent; color: inherit; font-size: 12px; }
+.gallery-toolbar button { cursor: pointer; }
+.gallery-toolbar button:disabled { opacity: .4; }
 .gallery-sidebar {
   display: flex;
   flex: 0 0 clamp(128px, 24%, 216px);

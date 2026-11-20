@@ -4,7 +4,7 @@ import {
   validateEmail,
   validateUserName,
   validatePassword,
-  validateInvitationCode,
+  validateVerificationCode,
 } from '../src/utils/validation.ts'
 
 test('所有字段均为必填，邮箱校验格式并允许提交前去除首尾空白', () => {
@@ -12,7 +12,7 @@ test('所有字段均为必填，邮箱校验格式并允许提交前去除首�
     validateEmail,
     validateUserName,
     validatePassword,
-    validateInvitationCode,
+    validateVerificationCode,
   ]) {
     assert.notEqual(validate(''), '')
   }
@@ -42,19 +42,10 @@ test('密码保留至少4位限制，允许半角特殊字符，拒绝中文和�
   }
 })
 
-test('邀请码必须恰好6位半角数字，保留开头的零', () => {
-  for (const value of ['123456', '000001', '000000']) {
-    assert.equal(validateInvitationCode(value), '', value)
+test('邮箱验证码校验保留前导零，拒绝空值及非六位数字', () => {
+  for (const value of ['000001', '123456', '000000']) assert.equal(validateVerificationCode(value), '')
+  for (const value of ['', '12345', '1234567', '１２３４５６', '12345a', ' 123456', '123456\n']) {
+    assert.notEqual(validateVerificationCode(value), '', value)
   }
-  for (const value of [
-    '12345',
-    '1234567',
-    'abcdef',
-    '12345a',
-    '１２３４５６',
-    '123456\n',
-    ' 123456',
-  ]) {
-    assert.notEqual(validateInvitationCode(value), '', value)
-  }
+  assert.notEqual(validateEmail(`${'a'.repeat(250)}@example.com`), '')
 })

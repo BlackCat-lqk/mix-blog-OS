@@ -21,6 +21,9 @@ export const useUserInfoStore = defineStore("userInfo", {
       },
     } as UserData,
   }),
+  getters: {
+    isAuthenticated: (state) => Boolean(state.data.token && state.data.user.isLogin),
+  },
   actions: {
     setUserInfo(val: UserData) {
       this.data = val;

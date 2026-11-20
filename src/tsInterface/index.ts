@@ -31,6 +31,35 @@ export interface AppItem {
   title?: string
   icon?: string
   component: Component
+  requiresAuth?: boolean
+  requiresAdmin?: boolean
+}
+
+export type ManagedUser = Omit<UserInfo, 'isLogin'>
+
+export interface UserListQuery {
+  page: number
+  pageSize: number
+  keyword: string
+  status: string
+}
+
+export interface UserListData {
+  list: ManagedUser[]
+  total: number
+}
+
+export interface ManagedUserInput {
+  userName: string
+  email: string
+  password?: string
+  role: string
+  status: string
+  desc: string
+}
+
+export interface ApiResult<T> {
+  data: { code: number; message?: string; data: T }
 }
 
 export interface DesktopWindow {
@@ -151,4 +180,86 @@ export interface MusicTrack {
   coverUrl?: string
   lyrics: MusicLyrics
   duration: number
+  lyricsUrl?: string
+}
+
+export interface ContentRecord {
+  [key: string]: string | number | null
+  id: string
+  description: string
+  status: 'active' | 'disabled'
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OnlineMusic extends ContentRecord {
+  title: string
+  artist: string
+  album: string
+  url: string
+  coverUrl: string
+  lyricsUrl: string
+  duration: number
+  fileName: string
+  source: 'online'
+}
+
+export interface ManagedAlbum extends ContentRecord, GalleryAlbum {}
+export interface ManagedMedia extends ContentRecord, GalleryMedia {}
+export interface ManagedCategory extends ContentRecord {
+  title: string
+  parentId: string | null
+}
+export interface ManagedSite extends ContentRecord, NavigationSite {
+  categoryId: string
+}
+
+export interface ContentByResource {
+  music: OnlineMusic
+  'gallery/albums': ManagedAlbum
+  'gallery/media': ManagedMedia
+  'navigation/categories': ManagedCategory
+  'navigation/sites': ManagedSite
+}
+export type ContentResource = keyof ContentByResource
+export interface ContentQuery {
+  page: number
+  pageSize: number
+  keyword: string
+  status?: string
+  albumId?: string
+  type?: string
+  parentId?: string
+  categoryId?: string
+}
+export interface ContentPage<T> {
+  list: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+export interface ContentOption {
+  value: string
+  label: string
+}
+export interface ContentField {
+  key: string
+  label: string
+  type: 'text' | 'textarea' | 'number' | 'url' | 'select' | 'asset'
+  required?: boolean
+  maxLength?: number
+  min?: number
+  max?: number
+  step?: number
+  options?: ContentOption[]
+  relation?: 'albums' | 'parents' | 'subcategories'
+  fileField?: string
+  accept?: string
+  fileLimit?: number
+}
+export interface ContentManagerConfig {
+  title: string
+  label: string
+  fields: ContentField[]
 }

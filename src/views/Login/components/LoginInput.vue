@@ -30,6 +30,7 @@
         :disabled="disabled"
         :autocomplete="autocomplete"
         :inputmode="inputmode"
+        :maxlength="maxlength"
         required
         :aria-invalid="hasError"
         :aria-describedby="hasError ? `login-input-error-${uid}` : undefined"
@@ -77,6 +78,7 @@ const props = withDefaults(
     type?: "text" | "password" | "email";
     autocomplete?: string;
     inputmode?: "text" | "email" | "numeric";
+    maxlength?: number;
     /** 占位提示 */
     placeholder?: string;
     /** 错误信息（非空时显示错误状态） */
